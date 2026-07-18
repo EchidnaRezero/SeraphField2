@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seraph Field Search Sample</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+KR:wght@300;400;500;700&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --font-ui: "Teko", sans-serif;
+    --font-body: "Noto Sans KR", sans-serif;
+    --font-mono: "Share Tech Mono", monospace;
+    --cyan: #19b8be;
+    --bg: #0e1012;
+    --text: #e0fbfc;
+    --dim: #757788;
+    --icon: rgba(196, 220, 222, 0.72);
+  }
+
+  * { box-sizing: border-box; }
+
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  body {
+    min-height: 100dvh;
+    overflow: hidden;
+    font-family: var(--font-body);
+    background:
+      radial-gradient(circle at 50% 12%, rgba(25, 184, 190, 0.04), transparent 42%),
+      linear-gradient(90deg, rgba(0, 229, 255, 0.02), transparent 24%, transparent 76%, rgba(0, 229, 255, 0.02)),
+      var(--bg);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0.5;
+    background: linear-gradient(to bottom, transparent, transparent 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+    background-size: 100% 4px;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    pointer-events: none;
+    background: radial-gradient(circle, transparent 60%, rgba(0, 10, 20, 0.85) 100%);
+  }
+
+  a,
+  button,
+  input { font: inherit; }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 22px;
+    height: 100dvh;
+    padding: 28px 32px 32px;
+    font-family: var(--font-ui);
+  }
+
+  .top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    border-bottom: 1px solid rgba(25, 184, 190, 0.14);
+    padding-bottom: 22px;
+  }
+
+  .title-group {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .back-icon {
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid rgba(25, 184, 190, 0.14);
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(25, 184, 190, 0.38);
+  }
+
+  .nav-icon {
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: rgba(196, 220, 222, 0.72);
+  }
+
+  .back-icon:hover,
+  .nav-icon:hover {
+    color: rgba(224, 251, 252, 0.92);
+  }
+
+  .back-icon:hover {
+    border-color: rgba(196, 220, 222, 0.44);
+    background: rgba(196, 220, 222, 0.08);
+  }
+
+  .back-icon svg,
+  .nav-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .heading {
+    min-width: 0;
+  }
+
+  .eyebrow {
+    margin-bottom: 2px;
+    color: rgba(25, 184, 190, 0.48);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+  }
+
+  .page-title {
+    margin: 0;
+    color: rgba(25, 184, 190, 0.88);
+    font-family: var(--font-ui);
+    font-size: clamp(2rem, 5vw, 2.6rem);
+    font-weight: 700;
+    line-height: 0.9;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .header-icons {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .search-panel {
+    width: min(100%, 900px);
+    justify-self: center;
+    display: grid;
+    gap: 12px;
+    border: 1px solid rgba(25, 184, 190, 0.22);
+    background: rgba(0, 0, 0, 0.34);
+    padding: 16px;
+    backdrop-filter: blur(12px);
+  }
+
+  .search-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .search-box {
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid rgba(25, 184, 190, 0.35);
+    background: rgba(25, 184, 190, 0.1);
+    color: var(--cyan);
+    outline: none;
+    padding: 0 42px 0 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+  }
+
+  .search-box input::placeholder {
+    color: rgba(25, 184, 190, 0.4);
+    text-transform: uppercase;
+  }
+
+  .search-box svg {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    color: rgba(25, 184, 190, 0.62);
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+  }
+
+  .scope-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .scope-chip {
+    min-height: 30px;
+    border: 1px solid rgba(196, 220, 222, 0.18);
+    background: rgba(3, 5, 7, 0.72);
+    color: rgba(196, 220, 222, 0.66);
+    padding: 0 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .scope-chip.is-active {
+    border-color: rgba(25, 184, 190, 0.4);
+    background: rgba(25, 184, 190, 0.08);
+    color: rgba(25, 184, 190, 0.9);
+  }
+
+  .scope-chip:hover {
+    border-color: rgba(196, 220, 222, 0.38);
+    color: rgba(224, 251, 252, 0.88);
+  }
+
+  .search-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: rgba(224, 251, 252, 0.46);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .results {
+    width: min(100%, 900px);
+    min-height: 0;
+    justify-self: center;
+    overflow-y: auto;
+    border: 1px solid rgba(25, 184, 190, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 16px;
+    scrollbar-width: none;
+  }
+
+  .results::-webkit-scrollbar { width: 0; height: 0; }
+
+  .result-list {
+    display: grid;
+    gap: 14px;
+  }
+
+  .result-card {
+    display: grid;
+    gap: 14px;
+    border: 1px solid rgba(25, 184, 190, 0.14);
+    background: rgba(25, 184, 190, 0.02);
+    padding: 18px;
+  }
+
+  .result-card:hover {
+    background: rgba(25, 184, 190, 0.05);
+    border-color: rgba(25, 184, 190, 0.3);
+  }
+
+  .result-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    color: rgba(25, 184, 190, 0.68);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .result-title {
+    margin: 0;
+    color: rgba(246, 252, 255, 0.94);
+    font-family: var(--font-ui);
+    font-size: clamp(1.55rem, 4vw, 2rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .result-summary {
+    margin: 0;
+    color: rgba(224, 251, 252, 0.64);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    border: 1px solid rgba(196, 220, 222, 0.22);
+    padding: 5px 8px;
+    color: rgba(224, 251, 252, 0.68);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .chip.is-tag {
+    color: rgba(25, 184, 190, 0.78);
+    border-color: rgba(25, 184, 190, 0.25);
+  }
+
+  @media (min-width: 920px) {
+    .result-card {
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.36fr);
+      align-items: center;
+    }
+
+    .chips {
+      justify-content: flex-end;
+    }
+  }
+
+  @media (max-width: 720px) {
+    body {
+      overflow: auto;
+    }
+
+    .page {
+      height: auto;
+      min-height: 100dvh;
+      padding: 16px;
+    }
+
+    .top-nav {
+      gap: 12px;
+      padding-bottom: 18px;
+    }
+
+    .title-group {
+      gap: 12px;
+    }
+
+    .back-icon,
+    .nav-icon {
+      width: 34px;
+      height: 34px;
+    }
+
+    .page-title {
+      font-size: clamp(1.65rem, 8vw, 2.1rem);
+    }
+
+    .search-row {
+      grid-template-columns: 1fr;
+    }
+
+    .search-meta {
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .results {
+      overflow: visible;
+      padding: 12px;
+    }
+
+    .result-card {
+      padding: 15px;
+    }
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <header class="top-nav">
+      <div class="title-group">
+        <a class="back-icon" href="#/" aria-label="back">
+          <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+        </a>
+        <div class="heading">
+          <div class="eyebrow">Search_Control</div>
+          <h1 class="page-title">Search Results</h1>
+        </div>
+      </div>
+      <nav class="header-icons" aria-label="utility navigation">
+        <a class="nav-icon" href="#/" aria-label="home">
+          <svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20H6v-7h12" /></svg>
+        </a>
+        <a class="nav-icon" href="#/wiki/profile" aria-label="profile">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5" /><path d="M5 20c1.3-4 3.7-6 7-6s5.7 2 7 6" /></svg>
+        </a>
+      </nav>
+    </header>
+
+    <section class="search-panel" aria-label="search">
+      <div class="search-row">
+        <label class="search-box">
+          <input value="sobolev" aria-label="search term">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="m16 16 4 4" /></svg>
+        </label>
+        <div class="scope-list" aria-label="search scope">
+          <button class="scope-chip is-active" type="button">All</button>
+          <button class="scope-chip" type="button">Title</button>
+          <button class="scope-chip" type="button">Tag</button>
+          <button class="scope-chip" type="button">Group</button>
+          <button class="scope-chip" type="button">Series</button>
+        </div>
+      </div>
+      <div class="search-meta">
+        <span>Integrated Search</span>
+        <span>3 matches</span>
+      </div>
+    </section>
+
+    <section class="results" aria-label="search results">
+      <div class="result-list">
+        <a class="result-card" href="#/wiki/theory/sobolev-spaces">
+          <div>
+            <div class="result-head">
+              <span>Theory</span>
+              <span>Created 2026.07.06</span>
+              <span>Updated 2026.07.06</span>
+            </div>
+            <h2 class="result-title">Sobolev Spaces, Weak Derivatives, and Integration by Parts</h2>
+            <p class="result-summary">
+              약미분과 Sobolev 공간을 test function과 integration by parts 관점에서 정리한 문서.
+            </p>
+          </div>
+          <div class="chips">
+            <span class="chip is-tag">weak-derivative</span>
+            <span class="chip is-tag">sobolev-space</span>
+            <span class="chip">series: analysis-roadmap</span>
+          </div>
+        </a>
+
+        <a class="result-card" href="#/wiki/theory/function-spaces">
+          <div>
+            <div class="result-head">
+              <span>Theory</span>
+              <span>Created 2026.07.03</span>
+              <span>Updated 2026.07.05</span>
+            </div>
+            <h2 class="result-title">Normed Spaces, Hilbert Spaces, Operators, and Adjoint</h2>
+            <p class="result-summary">
+              함수공간을 다루기 위한 norm, inner product, adjoint operator의 기본 구조.
+            </p>
+          </div>
+          <div class="chips">
+            <span class="chip is-tag">hilbert-space</span>
+            <span class="chip is-tag">operator</span>
+            <span class="chip">group: functional-analysis</span>
+          </div>
+        </a>
+
+        <a class="result-card" href="#/wiki/paper/diffusion-score">
+          <div>
+            <div class="result-head">
+              <span>Paper</span>
+              <span>Created 2026.07.01</span>
+              <span>Updated 2026.07.04</span>
+            </div>
+            <h2 class="result-title">Score Functions and Reverse-Time Dynamics</h2>
+            <p class="result-summary">
+              score-based model에서 reverse-time SDE와 probability flow ODE가 연결되는 방식.
+            </p>
+          </div>
+          <div class="chips">
+            <span class="chip is-tag">score-matching</span>
+            <span class="chip is-tag">diffusion</span>
+            <span class="chip">series: diffusion-reading</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

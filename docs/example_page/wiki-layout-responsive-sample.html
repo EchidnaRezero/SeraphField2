@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seraph Field Wiki Layout Sample</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+KR:wght@300;400;500;700&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --font-ui: "Teko", sans-serif;
+    --font-body: "Noto Sans KR", sans-serif;
+    --font-mono: "Share Tech Mono", monospace;
+    --color-neon-cyan: #19b8be;
+    --color-neon-cyan-dim: rgba(25, 184, 190, 0.15);
+    --color-neon-accent: #00e5ff;
+    --color-hud-bg: #0e1012;
+    --color-text-main: #e0fbfc;
+    --color-text-dim: #757788;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--color-hud-bg);
+    color: var(--color-text-main);
+  }
+
+  body {
+    min-height: 100dvh;
+    overflow: hidden;
+    font-family: var(--font-body);
+    background:
+      radial-gradient(circle at 50% 18%, rgba(25, 184, 190, 0.045), transparent 42%),
+      linear-gradient(90deg, rgba(0, 229, 255, 0.025), transparent 22%, transparent 78%, rgba(0, 229, 255, 0.025)),
+      var(--color-hud-bg);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0.5;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0) 50%,
+      rgba(0, 0, 0, 0.2) 50%,
+      rgba(0, 0, 0, 0.2)
+    );
+    background-size: 100% 4px;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(0, 0, 0, 0) 60%, rgba(0, 10, 20, 0.85) 100%);
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  button {
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100dvh;
+    min-height: 0;
+    padding: 28px 32px 0;
+    font-family: var(--font-ui);
+  }
+
+  .top-nav {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 900px) 48px;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    min-height: 42px;
+  }
+
+  .back {
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(25, 184, 190, 0.2);
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(25, 184, 190, 0.6);
+    font-family: var(--font-mono);
+    font-size: 18px;
+  }
+
+  .category-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(28px, 4vw, 58px);
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .category-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category {
+    display: inline-grid;
+    place-items: center;
+    width: 48px;
+    height: 42px;
+    align-items: center;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.2);
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  .category.is-active {
+    color: rgba(25, 184, 190, 0.95);
+  }
+
+  .category-mark {
+    color: currentColor;
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.18);
+  }
+
+  .category-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .top-search-link {
+    display: inline-grid;
+    place-items: center;
+    justify-self: end;
+    width: 38px;
+    height: 38px;
+    border: 1px solid transparent;
+    color: rgba(224, 251, 252, 0.72);
+    text-decoration: none;
+  }
+
+  .top-search-link:hover {
+    border-color: rgba(196, 220, 222, 0.44);
+    background: rgba(196, 220, 222, 0.08);
+    color: rgba(224, 251, 252, 0.92);
+  }
+
+  .top-search-link svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 48px;
+    min-height: 0;
+    padding-top: 62px;
+  }
+
+  .content-scroll {
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+  }
+
+  .content-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .article {
+    width: min(100%, 900px);
+    margin: 0 auto;
+    padding: 0 24px 110px;
+    font-family: var(--font-body);
+  }
+
+  .breadcrumb {
+    margin-bottom: 15px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-text-dim);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .article-title {
+    display: inline-block;
+    margin: 0 0 14px;
+    color: #fff;
+    font-family: var(--font-ui);
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 500;
+    line-height: 0.92;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    text-transform: uppercase;
+    word-spacing: 0.02em;
+  }
+
+  .article-summary {
+    margin: 0 0 26px;
+    color: #c9e4e5;
+    font-size: 1.05rem;
+    font-weight: 300;
+    line-height: 1.8;
+    word-break: keep-all;
+  }
+
+  .meta-data {
+    display: grid;
+    gap: 0.65rem;
+    margin-bottom: 2rem;
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .meta-label {
+    flex: 0 0 auto;
+    min-width: 4.5rem;
+    padding-top: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(25, 184, 190, 0.68);
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(25, 184, 190, 0.55);
+    padding: 0.24rem 0.52rem;
+    color: var(--color-neon-cyan);
+    background: rgba(25, 184, 190, 0.08);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .article-section-title {
+    margin: 2rem 0 1rem;
+    border-bottom: 1px solid var(--color-neon-cyan-dim);
+    color: var(--color-neon-cyan);
+    font-family: var(--font-ui);
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: none;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.25);
+  }
+
+  .article h3 {
+    margin: 1.6rem 0 0.75rem;
+    color: rgba(224, 251, 252, 0.96);
+    font-family: var(--font-ui);
+    font-size: clamp(1.15rem, 2vw, 1.7rem);
+    font-weight: 700;
+    line-height: 1.05;
+  }
+
+  .article p {
+    margin: 0 0 1.5rem;
+    color: #c9e4e5;
+    font-size: 1.05rem;
+    font-weight: 300;
+    line-height: 1.8;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .math-block {
+    width: 100%;
+    max-width: 100%;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    border: 1px solid rgba(25, 184, 190, 0.12);
+    border-left: 3px solid var(--color-neon-cyan);
+    background: rgba(3, 5, 7, 0.9);
+    color: #fff;
+    overflow-x: auto;
+    overflow-y: hidden;
+    text-align: center;
+    font-family: "Times New Roman", serif;
+    font-size: 1.18rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.02),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+  }
+
+  .toc {
+    min-width: 0;
+    overflow-y: auto;
+    padding: 88px 20px 70px 0;
+    scrollbar-width: none;
+  }
+
+  .toc::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toc-heading {
+    margin: 0 0 22px;
+    color: rgba(255, 255, 255, 0.35);
+    font-family: var(--font-body);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .toc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .toc-button {
+    position: relative;
+    border: 0;
+    background: transparent;
+    padding: 0 0 0 14px;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.35);
+    font-family: var(--font-ui);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: 0.04em;
+  }
+
+  .toc-button.is-active {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 700;
+  }
+
+  .toc-button.is-active::before {
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    width: 4px;
+    height: 16px;
+    transform: translateY(-50%);
+    background: #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+
+  .mobile-toc {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    body {
+      overflow: auto;
+    }
+
+    .page {
+      height: auto;
+      min-height: 100dvh;
+      padding: 16px 16px 0;
+    }
+
+    .top-nav {
+      grid-template-columns: 38px minmax(0, 1fr) 38px;
+      gap: 12px;
+    }
+
+    .category-row {
+      justify-content: center;
+      gap: clamp(18px, 8vw, 34px);
+    }
+
+    .category {
+      width: 38px;
+      height: 36px;
+    }
+
+    .category-mark {
+      width: 19px;
+      height: 19px;
+    }
+
+    .workspace {
+      display: block;
+      padding-top: 22px;
+    }
+
+    .content-scroll {
+      overflow: visible;
+    }
+
+    .article {
+      width: 100%;
+      padding: 0 0 92px;
+    }
+
+    .article-title {
+      font-size: clamp(1.6rem, 8.6vw, 2.5rem);
+      line-height: 0.98;
+      letter-spacing: 1px;
+      margin-bottom: 0.7rem;
+    }
+
+    .article-summary,
+    .article p {
+      font-size: 0.94rem;
+      line-height: 1.7;
+    }
+
+    .article-section-title {
+      margin-top: 1.5rem;
+      margin-bottom: 0.8rem;
+      font-size: clamp(1.2rem, 5.8vw, 1.8rem);
+      line-height: 1.05;
+    }
+
+    .math-block {
+      padding: 0.8rem 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    .toc {
+      display: none;
+    }
+
+    .mobile-toc {
+      display: block;
+      margin: 0 0 1.5rem;
+      border: 1px solid rgba(25, 184, 190, 0.24);
+      background: rgba(3, 5, 7, 0.72);
+    }
+
+    .mobile-toc summary {
+      cursor: pointer;
+      padding: 0.85rem 1rem;
+      color: rgba(224, 251, 252, 0.78);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      list-style: none;
+    }
+
+    .mobile-toc summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .mobile-toc summary::after {
+      content: "+";
+      float: right;
+      color: rgba(224, 251, 252, 0.72);
+    }
+
+    .mobile-toc[open] summary::after {
+      content: "-";
+    }
+
+    .mobile-toc .toc-list {
+      gap: 0;
+      border-top: 1px solid rgba(25, 184, 190, 0.14);
+      padding: 0.4rem 0;
+    }
+
+    .mobile-toc .toc-button {
+      width: 100%;
+      padding: 0.62rem 1rem;
+      font-size: 1rem;
+      line-height: 1.25;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="top-nav">
+      <button class="back" type="button" aria-label="back">←</button>
+
+      <nav class="category-row" aria-label="category navigation">
+        <button class="category is-active" type="button" title="Theory">
+          <svg class="category-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 7v14" />
+            <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+          </svg>
+          <span class="category-label">Theory</span>
+        </button>
+        <button class="category" type="button" title="Paper">
+          <svg class="category-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" />
+            <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+            <path d="M10 9H8" />
+            <path d="M16 13H8" />
+            <path d="M16 17H8" />
+          </svg>
+          <span class="category-label">Paper</span>
+        </button>
+        <button class="category" type="button" title="Repo">
+          <svg class="category-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m18 16 4-4-4-4" />
+            <path d="m6 8-4 4 4 4" />
+            <path d="m14.5 4-5 16" />
+          </svg>
+          <span class="category-label">Repo</span>
+        </button>
+        <button class="category" type="button" title="Implementation">
+          <svg class="category-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <polyline points="4 17 10 11 4 5" />
+            <line x1="12" x2="20" y1="19" y2="19" />
+          </svg>
+          <span class="category-label">Implementation</span>
+        </button>
+      </nav>
+
+      <a class="top-search-link" href="#/search" aria-label="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="6" />
+          <path d="m16 16 4 4" />
+        </svg>
+      </a>
+    </header>
+
+    <div class="workspace">
+      <main class="content-scroll">
+        <article class="article">
+          <div class="breadcrumb">Theory / Sobolev Spaces</div>
+          <h1 class="article-title">Sobolev Spaces, Weak Derivatives, and Integration by Parts</h1>
+          <p class="article-summary">
+            고전미분은 점마다 도함수를 요구하지만, 약미분은 test function과의 적분 관계로 미분을 정의한다.
+          </p>
+
+          <div class="meta-data">
+            <div class="meta-row">
+              <span class="meta-label">Tags</span>
+              <span class="tag">weak-derivative</span>
+              <span class="tag">sobolev-space</span>
+              <span class="tag">integration-by-parts</span>
+            </div>
+          </div>
+
+          <details class="mobile-toc">
+            <summary>Document Roadmap</summary>
+            <nav class="toc-list">
+              <button class="toc-button is-active" type="button">(1) Classical Derivative와 Weak Derivative</button>
+              <button class="toc-button" type="button">(2) 간단한 예시</button>
+              <button class="toc-button" type="button">(3) Sobolev Space</button>
+              <button class="toc-button" type="button">(4) 원소 수준 비유</button>
+              <button class="toc-button" type="button">(5) Integration by Parts</button>
+            </nav>
+          </details>
+
+          <h2 class="article-section-title">(1) Classical Derivative와 Weak Derivative</h2>
+          <p>고전미분은 점마다 도함수를 요구한다. 하지만 함수가 모든 점에서 매끄러울 필요는 없다.</p>
+          <div class="math-block">u(x) = |x|</div>
+          <p>
+            처럼 점 하나에서 미분이 안 되는 함수도 많다. weak derivative는 test function과의 적분 관계로
+            미분을 정의한다.
+          </p>
+
+          <h2 class="article-section-title">(2) 간단한 예시</h2>
+          <p>
+            미분을 직접 계산하기 어렵거나 불가능한 경우에도 적분 항등식을 통해 함수의 변화를 다룰 수 있다.
+            이 관점은 PDE와 변분 문제에서 특히 자연스럽다.
+          </p>
+
+          <h2 class="article-section-title">(3) Sobolev Space</h2>
+          <p>
+            Sobolev space는 함수 자체와 약도함수가 함께 적분 가능한 함수들의 공간이다. 예를 들어
+            <span style="color:#fff">H¹(Ω)</span>는 함수와 1차 약도함수가 모두 L²에 속하는 공간이다.
+          </p>
+          <div class="math-block">H¹(Ω) := W¹,²(Ω)</div>
+
+          <h2 class="article-section-title">(4) 원소 수준 비유</h2>
+          <p>
+            유한차원에서는 벡터의 각 성분을 따지듯이, 함수공간에서는 함수값과 약도함수를 함께 관리한다.
+          </p>
+
+          <h2 class="article-section-title">(5) Integration by Parts</h2>
+          <p>weak derivative 정의의 핵심은 integration by parts다. 충분히 매끄러우면 다음 관계를 얻는다.</p>
+          <div class="math-block">∫Ω u ∂ᵢφ dx = − ∫Ω (∂ᵢu) φ dx + boundary term</div>
+        </article>
+      </main>
+
+      <aside class="toc" aria-label="document map">
+        <h2 class="toc-heading">전체상</h2>
+        <h2 class="toc-heading">각 층의 분기 포인트</h2>
+        <h2 class="toc-heading">문서 로드맵</h2>
+        <nav class="toc-list">
+          <button class="toc-button is-active" type="button">(1) Classical Derivative와 Weak Derivative</button>
+          <button class="toc-button" type="button">(2) 간단한 예시</button>
+          <button class="toc-button" type="button">(3) Sobolev Space</button>
+          <button class="toc-button" type="button">(4) 원소 수준 비유</button>
+          <button class="toc-button" type="button">(5) Integration by Parts</button>
+        </nav>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "name": "seraph-field",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "db:init": "node scripts/init-db.mjs",
+    "db:import": "node scripts/import-wiki.mjs",
+    "export:content": "node scripts/export-content.mjs",
+    "lint:markdown": "node scripts/lint-markdown.mjs",
+    "test:markdown-lint": "node scripts/test-lint-markdown.mjs",
+    "dev": "npm run export:content && vite",
+    "build": "npm run export:content && tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "katex": "^0.17.0",
+    "lucide-react": "^0.547.0",
+    "mermaid": "^11.16.0",
+    "motion": "^12.42.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.1",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "@vitejs/plugin-react": "^6.0.3",
+    "gray-matter": "^4.0.3",
+    "marked": "^18.0.5",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  }
+}

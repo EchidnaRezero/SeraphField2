@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seraph Field 디자인 노트</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+KR:wght@300;400;500;700&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0e1012;
+    --panel: rgba(3, 5, 7, 0.72);
+    --rule: rgba(25, 184, 190, 0.18);
+    --rule-strong: rgba(25, 184, 190, 0.34);
+    --cyan: #19b8be;
+    --icon: rgba(196, 220, 222, 0.72);
+    --text: #e0fbfc;
+    --text-dim: rgba(224, 251, 252, 0.66);
+    --text-muted: rgba(224, 251, 252, 0.42);
+    --font-ui: "Teko", sans-serif;
+    --font-body: "Noto Sans KR", sans-serif;
+    --font-mono: "Share Tech Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+
+  body {
+    min-height: 100vh;
+    font-family: var(--font-body);
+    line-height: 1.75;
+    background:
+      radial-gradient(circle at 50% 12%, rgba(25, 184, 190, 0.04), transparent 42%),
+      linear-gradient(90deg, rgba(0, 229, 255, 0.02), transparent 24%, transparent 76%, rgba(0, 229, 255, 0.02)),
+      var(--bg);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0.5;
+    background: linear-gradient(to bottom, transparent, transparent 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+    background-size: 100% 4px;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    pointer-events: none;
+    background: radial-gradient(circle, transparent 60%, rgba(0, 10, 20, 0.85) 100%);
+  }
+
+  .doc {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 72px 36px 112px;
+  }
+
+  .masthead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 24px;
+    margin-bottom: 52px;
+  }
+
+  .brand {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 8px 0 0;
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: 0;
+  }
+
+  .lead {
+    max-width: 700px;
+    margin: 0 0 56px;
+    color: var(--text-dim);
+    font-size: 15px;
+  }
+
+  h2 {
+    margin: 48px 0 14px;
+    border-left: 2px solid var(--cyan);
+    padding-left: 12px;
+    color: var(--cyan);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+
+  p { margin: 0 0 14px; color: var(--text-dim); font-size: 14px; }
+  ul { margin: 0 0 16px; padding-left: 20px; }
+  li { margin-bottom: 6px; color: var(--text-dim); font-size: 14px; }
+  li::marker { color: var(--cyan); }
+
+  code {
+    border: 1px solid var(--rule);
+    background: rgba(25, 184, 190, 0.08);
+    color: var(--cyan);
+    padding: 1px 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .swatch {
+    border: 1px solid var(--rule);
+    background: var(--panel);
+    padding: 14px 12px;
+  }
+
+  .dot {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    margin-bottom: 10px;
+  }
+
+  .swatch-name,
+  .swatch-value {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .swatch-name { color: var(--text-muted); }
+  .swatch-value { color: var(--cyan); }
+
+  .spec {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 6px 22px;
+    border-left: 2px solid var(--rule-strong);
+    background: var(--panel);
+    padding: 16px 18px;
+  }
+
+  .spec dt {
+    color: rgba(25, 184, 190, 0.72);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .spec dd {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  .links a {
+    color: var(--cyan);
+    text-decoration: none;
+  }
+
+  .links a:hover { color: #fff; }
+
+  @media (max-width: 680px) {
+    .doc { padding: 48px 22px 80px; }
+    .masthead { grid-template-columns: 1fr; }
+    .swatches { grid-template-columns: repeat(2, 1fr); }
+    .spec { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <main class="doc">
+    <header class="masthead">
+      <div>
+        <div class="brand">Seraph Field</div>
+        <h1>디자인 노트</h1>
+      </div>
+    </header>
+
+    <h2>예시 페이지</h2>
+    <ul class="links">
+      <li><a href="example_page/lobby-simple-sample.html">로비 샘플</a></li>
+      <li><a href="example_page/wiki-layout-responsive-sample.html">본문 샘플</a></li>
+      <li><a href="example_page/search-layout-sample.html">검색 샘플</a></li>
+    </ul>
+
+    <h2>시각 언어</h2>
+    <p>
+      어두운 흑청/흑연 계열 표면, 낮은 opacity의 시안 라인, 회청색 유틸리티 아이콘, scanline, 부드러운 vignette를 사용합니다. 시안은 낮은 opacity의 HUD 신호로 제한합니다.
+    </p>
+
+    <div class="swatches">
+      <div class="swatch">
+        <div class="dot" style="background:#0e1012"></div>
+        <div class="swatch-name">Background</div>
+        <div class="swatch-value">#0E1012</div>
+      </div>
+      <div class="swatch">
+        <div class="dot" style="background:#030507"></div>
+        <div class="swatch-name">Panel</div>
+        <div class="swatch-value">#030507</div>
+      </div>
+      <div class="swatch">
+        <div class="dot" style="background:#19b8be"></div>
+        <div class="swatch-name">HUD Cyan</div>
+        <div class="swatch-value">#19B8BE</div>
+      </div>
+      <div class="swatch">
+        <div class="dot" style="background:#c4dcde"></div>
+        <div class="swatch-name">Icon</div>
+        <div class="swatch-value">#C4DCDE</div>
+      </div>
+      <div class="swatch">
+        <div class="dot" style="background:#e0fbfc"></div>
+        <div class="swatch-name">Text</div>
+        <div class="swatch-value">#E0FBFC</div>
+      </div>
+    </div>
+
+    <h2>타이포그래피</h2>
+    <dl class="spec">
+      <dt>Display</dt><dd><code>Teko</code>: 페이지 제목, 카테고리 라벨, 검색 결과 제목</dd>
+      <dt>Mono</dt><dd><code>Share Tech Mono</code>: HUD 라벨, 메타데이터, 검색 범위 칩, 작은 컨트롤</dd>
+      <dt>Body</dt><dd><code>Noto Sans KR</code>: 본문 문장과 한국어 설명</dd>
+    </dl>
+
+    <h2>로비</h2>
+    <ul>
+      <li>이미지 기반 HUD 배경 위에 카테고리 카드를 배치합니다.</li>
+      <li>카테고리는 <code>THEORY</code>, <code>PAPER</code>, <code>REPO</code>, <code>IMPLEMENT</code> 네 개를 사용합니다.</li>
+      <li>홈, 프로필, 검색은 상단 우측 유틸리티 아이콘으로 둡니다.</li>
+      <li>로비에는 검색 입력창을 두지 않습니다.</li>
+      <li>데스크탑과 모바일은 같은 요소를 쓰고, 데스크탑에서만 카테고리 카드 묶음의 위치를 조정합니다.</li>
+    </ul>
+
+    <h2>위키 본문</h2>
+    <ul>
+      <li>상단 카테고리 아이콘 행은 본문 폭 기준으로 중앙 정렬합니다.</li>
+      <li>상단 검색은 작은 우측 아이콘으로 둡니다.</li>
+      <li>데스크탑은 우측 문서 로드맵을 유지합니다.</li>
+      <li>모바일은 문서 메타데이터 아래에 접이식 문서 로드맵을 둡니다.</li>
+    </ul>
+
+    <h2>검색</h2>
+    <ul>
+      <li>검색 범위는 scope chip으로 선택합니다.</li>
+      <li>검색 결과 카드는 모바일과 데스크탑에서 같은 구조를 사용합니다.</li>
+      <li>데스크탑에서는 결과 칩을 카드 우측에 정렬할 수 있습니다.</li>
+    </ul>
+  </main>
+</body>
+</html>

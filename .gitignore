@@ -1,0 +1,17 @@
+raw/
+draft/
+reference/
+.agents/
+.venv/
+db/local/
+db/exports/
+seraph-field/public/db/exports/
+seraph-field/dist/
+seraph-field/node_modules/
+seraph-field/tsconfig.tsbuildinfo
+local.settings.json
+.env
+.env.*
+*.sqlite
+*.db
+*.log
