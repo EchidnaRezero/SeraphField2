@@ -1,201 +1,173 @@
 <!doctype html>
+<!--
+  AI implementation reference:
+  - Rendering values: ../web-interface-spec.md#b-5-특수-렌더링
+  - Content source: ../../wiki/implement/mermaid-math-label-sample.md
+  Keep the HTML/CSS values aligned with that specification.
+-->
 <html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Seraph Field Wiki Layout Sample</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+KR:wght@300;400;500;700&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+<title>Seraph Field Wiki Rendering Sample</title>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
 <style>
+  @font-face { font-family: "Teko"; src: url("assets/teko-400.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+  @font-face { font-family: "Teko"; src: url("assets/teko-500.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+  @font-face { font-family: "Teko"; src: url("assets/teko-600.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+  @font-face { font-family: "Teko"; src: url("assets/teko-700.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+  @font-face { font-family: "Noto Sans KR"; src: url("assets/noto-sans-kr-300.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+  @font-face { font-family: "Noto Sans KR"; src: url("assets/noto-sans-kr-400.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+  @font-face { font-family: "Noto Sans KR"; src: url("assets/noto-sans-kr-500.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+  @font-face { font-family: "Noto Sans KR"; src: url("assets/noto-sans-kr-700.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+  @font-face { font-family: "Share Tech Mono"; src: url("assets/share-tech-mono-400.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+
   :root {
-    --font-ui: "Teko", sans-serif;
-    --font-body: "Noto Sans KR", sans-serif;
-    --font-mono: "Share Tech Mono", monospace;
-    --color-neon-cyan: #19b8be;
-    --color-neon-cyan-dim: rgba(25, 184, 190, 0.15);
-    --color-neon-accent: #00e5ff;
-    --color-hud-bg: #0e1012;
-    --color-text-main: #e0fbfc;
-    --color-text-dim: #757788;
+    color-scheme: dark;
+    --font-ui: "Teko", "Arial Narrow", "Bahnschrift Condensed", sans-serif;
+    --font-body: "Noto Sans KR", "Malgun Gothic", "Segoe UI", sans-serif;
+    --font-mono: "Share Tech Mono", "Cascadia Mono", Consolas, monospace;
+    --bg: #0e1012;
+    --cyan: #19b8be;
+    --icon: rgba(196, 220, 222, 0.72);
+    --text: #e0fbfc;
   }
 
-  * {
-    box-sizing: border-box;
-  }
-
-  html,
-  body {
-    margin: 0;
-    min-height: 100%;
-    background: var(--color-hud-bg);
-    color: var(--color-text-main);
-  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-width: 320px; min-height: 100%; background: var(--bg); }
 
   body {
-    min-height: 100dvh;
-    overflow: hidden;
-    font-family: var(--font-body);
+    min-height: 100vh;
     background:
-      radial-gradient(circle at 50% 18%, rgba(25, 184, 190, 0.045), transparent 42%),
-      linear-gradient(90deg, rgba(0, 229, 255, 0.025), transparent 22%, transparent 78%, rgba(0, 229, 255, 0.025)),
-      var(--color-hud-bg);
+      radial-gradient(circle at 50% 12%, rgba(25, 184, 190, 0.04), transparent 42%),
+      linear-gradient(90deg, rgba(0, 229, 255, 0.02), transparent 24%, transparent 76%, rgba(0, 229, 255, 0.02)),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.75;
+  }
+
+  body::before,
+  body::after {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    content: "";
   }
 
   body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
     z-index: 20;
-    pointer-events: none;
     opacity: 0.5;
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0),
-      rgba(255, 255, 255, 0) 50%,
-      rgba(0, 0, 0, 0.2) 50%,
-      rgba(0, 0, 0, 0.2)
-    );
+    background: linear-gradient(to bottom, transparent, transparent 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
     background-size: 100% 4px;
   }
 
   body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
     z-index: 19;
-    pointer-events: none;
-    background: radial-gradient(circle, rgba(0, 0, 0, 0) 60%, rgba(0, 10, 20, 0.85) 100%);
+    background: radial-gradient(circle, transparent 60%, rgba(0, 10, 20, 0.85) 100%);
   }
 
-  button,
-  input {
-    font: inherit;
-  }
+  a { color: inherit; text-decoration: none; }
+  button { color: inherit; cursor: pointer; font: inherit; }
 
-  button {
-    color: inherit;
-    cursor: pointer;
-  }
-
-  .page {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    height: 100dvh;
-    min-height: 0;
-    padding: 28px 32px 0;
-    font-family: var(--font-ui);
-  }
-
-  .top-nav {
-    display: grid;
-    grid-template-columns: 48px minmax(0, 900px) 48px;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
-    min-height: 42px;
-  }
-
-  .back {
-    display: inline-grid;
-    place-items: center;
-    width: 38px;
-    height: 38px;
-    border: 1px solid rgba(25, 184, 190, 0.2);
-    border-radius: 999px;
-    background: transparent;
-    color: rgba(25, 184, 190, 0.6);
-    font-family: var(--font-mono);
-    font-size: 18px;
-  }
-
-  .category-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(28px, 4vw, 58px);
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .category-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  .category {
-    display: inline-grid;
-    place-items: center;
-    width: 48px;
-    height: 42px;
-    align-items: center;
-    border: 0;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.2);
-    padding: 0;
-    font-family: var(--font-mono);
-    font-size: 22px;
-    font-weight: 400;
-    line-height: 1;
-  }
-
-  .category.is-active {
-    color: rgba(25, 184, 190, 0.95);
-  }
-
-  .category-mark {
-    color: currentColor;
-    width: 22px;
-    height: 22px;
-    stroke: currentColor;
-    stroke-width: 2;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    text-shadow: 0 0 8px rgba(0, 229, 255, 0.18);
-  }
-
-  .category-label {
+  .sr-only {
     position: absolute;
     width: 1px;
     height: 1px;
+    margin: -1px;
     overflow: hidden;
-    clip: rect(0 0 0 0);
+    clip: rect(0, 0, 0, 0);
     white-space: nowrap;
   }
 
-  .top-search-link {
-    display: inline-grid;
-    place-items: center;
-    justify-self: end;
-    width: 38px;
-    height: 38px;
-    border: 1px solid transparent;
-    color: rgba(224, 251, 252, 0.72);
-    text-decoration: none;
+  .sf-app {
+    position: relative;
+    z-index: 1;
+    isolation: isolate;
+    min-height: 100vh;
   }
 
-  .top-search-link:hover {
+  .icon-button {
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--icon);
+  }
+
+  .icon-button:hover {
     border-color: rgba(196, 220, 222, 0.44);
     background: rgba(196, 220, 222, 0.08);
     color: rgba(224, 251, 252, 0.92);
   }
 
-  .top-search-link svg {
+  .icon-button--round {
+    border-color: rgba(25, 184, 190, 0.2);
+    border-radius: 999px;
+    color: rgba(25, 184, 190, 0.6);
+  }
+
+  .icon-button svg,
+  .category-nav__item svg,
+  .collection-chevron {
     width: 20px;
     height: 20px;
+    fill: none;
     stroke: currentColor;
     stroke-width: 1.8;
-    fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
 
-  .workspace {
+  .wiki-page {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    padding: 28px 32px 0;
+    font-family: var(--font-ui);
+  }
+
+  .page-toolbar {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 900px) 48px;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    min-height: 42px;
+  }
+
+  .category-nav {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .category-nav::-webkit-scrollbar { display: none; }
+
+  .category-nav__item {
+    display: inline-grid;
+    width: 48px;
+    height: 42px;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  .category-nav__item[data-active="true"] { color: rgba(25, 184, 190, 0.95); }
+  .category-nav__item svg { width: 22px; height: 22px; stroke-width: 2; filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.18)); }
+  .top-search-link { justify-self: end; }
+
+  .wiki-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 290px;
     gap: 48px;
@@ -203,49 +175,41 @@
     padding-top: 62px;
   }
 
-  .content-scroll {
+  .wiki-content-scroll {
+    grid-column: 1;
     min-width: 0;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    padding-bottom: 45vh;
     scrollbar-width: none;
   }
 
-  .content-scroll::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-  }
+  .wiki-content-scroll::-webkit-scrollbar { width: 0; height: 0; }
 
-  .article {
+  .wiki-hero,
+  .roadmap-mobile,
+  .wiki-body {
     width: min(100%, 900px);
     margin: 0 auto;
-    padding: 0 24px 110px;
+    padding: 0 24px;
     font-family: var(--font-body);
   }
 
-  .breadcrumb {
-    margin-bottom: 15px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--color-text-dim);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-
-  .article-title {
+  .wiki-hero h1 {
     display: inline-block;
     margin: 0 0 14px;
     color: #fff;
     font-family: var(--font-ui);
-    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-size: 4rem;
     font-weight: 500;
     line-height: 0.92;
-    letter-spacing: 2px;
+    letter-spacing: 0.02em;
     text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
     text-transform: uppercase;
-    word-spacing: 0.02em;
   }
 
-  .article-summary {
+  .wiki-hero > p {
     margin: 0 0 26px;
     color: #c9e4e5;
     font-size: 1.05rem;
@@ -254,66 +218,65 @@
     word-break: keep-all;
   }
 
-  .meta-data {
-    display: grid;
-    gap: 0.65rem;
-    margin-bottom: 2rem;
-  }
+  .wiki-meta { display: grid; gap: 0.65rem; margin-bottom: 2rem; }
 
   .meta-row {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
     flex-wrap: wrap;
+    color: rgba(224, 251, 252, 0.76);
+    font-size: 0.85rem;
   }
 
   .meta-label {
     flex: 0 0 auto;
     min-width: 4.5rem;
     padding-top: 0.2rem;
+    color: rgba(25, 184, 190, 0.68);
     font-family: var(--font-mono);
     font-size: 0.68rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(25, 184, 190, 0.68);
   }
 
-  .tag {
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tag-list li {
     display: inline-flex;
     align-items: center;
     border: 1px solid rgba(25, 184, 190, 0.55);
-    padding: 0.24rem 0.52rem;
-    color: var(--color-neon-cyan);
     background: rgba(25, 184, 190, 0.08);
+    padding: 0.24rem 0.52rem;
+    color: var(--cyan);
     font-family: var(--font-mono);
     font-size: 0.7rem;
     line-height: 1.1;
-    text-transform: uppercase;
     letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
-  .article-section-title {
+  .wiki-body { min-width: 0; }
+
+  .wiki-body > section > h2 {
     margin: 2rem 0 1rem;
-    border-bottom: 1px solid var(--color-neon-cyan-dim);
-    color: var(--color-neon-cyan);
+    border-bottom: 1px solid rgba(25, 184, 190, 0.15);
+    color: var(--cyan);
     font-family: var(--font-ui);
-    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-size: 2.5rem;
     font-weight: 700;
     line-height: 1;
-    text-transform: none;
     text-shadow: 0 0 10px rgba(0, 255, 255, 0.25);
   }
 
-  .article h3 {
-    margin: 1.6rem 0 0.75rem;
-    color: rgba(224, 251, 252, 0.96);
-    font-family: var(--font-ui);
-    font-size: clamp(1.15rem, 2vw, 1.7rem);
-    font-weight: 700;
-    line-height: 1.05;
-  }
-
-  .article p {
+  .section-markdown p {
     margin: 0 0 1.5rem;
     color: #c9e4e5;
     font-size: 1.05rem;
@@ -323,331 +286,768 @@
     overflow-wrap: anywhere;
   }
 
-  .math-block {
+  .section-markdown > .katex-display,
+  .section-markdown li .katex-display {
     width: 100%;
     max-width: 100%;
     margin: 1.5rem 0;
-    padding: 1rem;
-    border: 1px solid rgba(25, 184, 190, 0.12);
-    border-left: 3px solid var(--color-neon-cyan);
-    background: rgba(3, 5, 7, 0.9);
-    color: #fff;
     overflow-x: auto;
     overflow-y: hidden;
-    text-align: center;
-    font-family: "Times New Roman", serif;
-    font-size: 1.18rem;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.02),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(25, 184, 190, 0.12);
+    border-left: 3px solid var(--cyan);
+    background: rgba(3, 5, 7, 0.9);
+    padding: 1rem;
   }
 
-  .toc {
+  .section-markdown .katex-display > .katex { display: inline-block; min-width: 100%; }
+
+  .code-wrapper,
+  .mermaid-wrapper { width: 100%; max-width: 100%; margin: 1.5rem 0; }
+
+  .code-wrapper {
+    overflow: hidden;
+    border: 1px solid rgba(25, 184, 190, 0.3);
+    background: rgba(0, 0, 0, 0.85);
+  }
+
+  .code-header,
+  .mermaid-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-bottom: 1px solid rgba(25, 184, 190, 0.3);
+    background: rgba(25, 184, 190, 0.1);
+    padding: 0.5rem 1rem;
+    color: var(--cyan);
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .code-wrapper pre {
+    /* Matches ContentRenderer SyntaxHighlighter: 13px, 1.5 line-height, and 1rem padding. */
+    margin: 0;
+    overflow-x: auto;
+    background: transparent;
+    padding: 1rem;
+    color: #d4d4d4;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .code-wrapper pre code {
+    font-family: var(--font-mono);
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .token-keyword { color: #c586c0; }
+  .token-function { color: #dcdcaa; }
+  .token-string { color: #ce9178; }
+  .token-type { color: #4ec9b0; }
+  .token-tag { color: #569cd6; }
+
+  .mermaid-toolbar { flex-wrap: wrap; margin-bottom: 0.55rem; border: 0; }
+
+  .mermaid-toolbar__zoom {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(25, 184, 190, 0.3);
+    background: rgba(25, 184, 190, 0.08);
+    padding: 0.2rem 0.45rem;
+  }
+
+  .mermaid-toolbar__controls { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+  .mermaid-toolbar__button {
+    min-width: 2.15rem;
+    height: 2rem;
+    border: 1px solid rgba(25, 184, 190, 0.34);
+    background: rgba(25, 184, 190, 0.08);
+    color: #e0fbfc;
+    padding: 0 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .mermaid-toolbar__button--reset { min-width: auto; padding-inline: 0.7rem; font-size: 0.7rem; }
+
+  .mermaid-surface {
+    overflow: auto;
+    border: 1px solid rgba(25, 184, 190, 0.3);
+    background:
+      linear-gradient(180deg, rgba(25, 184, 190, 0.05), rgba(0, 0, 0, 0)),
+      rgba(4, 6, 8, 0.92);
+    padding: 0.9rem 0.9rem 1rem;
+  }
+
+  .mermaid-diagram {
+    width: 100%;
+    min-width: 100%;
+    transform-origin: top left;
+    transition: transform 140ms ease;
+  }
+
+  .mermaid-diagram svg {
+    display: block;
+    width: 100% !important;
+    min-width: 0;
+    height: auto;
+  }
+
+  .mermaid-diagram .label,
+  .mermaid-diagram .nodeLabel,
+  .mermaid-diagram .edgeLabel {
+    font-family: var(--font-body) !important;
+    line-height: 1.35 !important;
+  }
+
+  .mermaid-diagram .edgeLabel,
+  .mermaid-diagram .labelBkg {
+    background-color: transparent !important;
+  }
+
+  .mermaid-diagram .static-node {
+    fill: #08181a;
+    stroke: #19b8be;
+    stroke-width: 1px;
+  }
+
+  .mermaid-diagram .static-edge {
+    fill: none;
+    stroke: #19b8be;
+    stroke-width: 1px;
+  }
+
+  .mermaid-diagram foreignObject > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #e0fbfc;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .roadmap-desktop {
+    grid-column: 2;
+    grid-row: 1 / span 3;
     min-width: 0;
     overflow-y: auto;
     padding: 88px 20px 70px 0;
     scrollbar-width: none;
   }
 
-  .toc::-webkit-scrollbar {
-    display: none;
-  }
-
-  .toc-heading {
+  .roadmap-desktop .eyebrow {
     margin: 0 0 22px;
     color: rgba(255, 255, 255, 0.35);
     font-family: var(--font-body);
-    font-size: 18px;
+    font-size: 1.12rem;
     font-weight: 500;
-    line-height: 1.5;
   }
 
-  .toc-list {
+  .roadmap-desktop ol,
+  .roadmap-mobile ol {
     display: flex;
     flex-direction: column;
     gap: 16px;
     margin: 0;
     padding: 0;
+    list-style: none;
   }
 
-  .toc-button {
-    position: relative;
+  .roadmap-desktop li,
+  .roadmap-mobile li { position: relative; color: rgba(255, 255, 255, 0.35); }
+
+  .roadmap-desktop button,
+  .roadmap-mobile button {
+    display: block;
+    width: 100%;
     border: 0;
     background: transparent;
     padding: 0 0 0 14px;
-    text-align: left;
-    color: rgba(255, 255, 255, 0.35);
+    color: inherit;
     font-family: var(--font-ui);
-    font-size: 18px;
+    font-size: 1.12rem;
     font-weight: 500;
     line-height: 1.45;
     letter-spacing: 0.04em;
+    text-align: left;
   }
 
-  .toc-button.is-active {
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 700;
-  }
+  .roadmap-desktop li[data-active="true"],
+  .roadmap-mobile li[data-active="true"] { color: rgba(255, 255, 255, 0.9); font-weight: 700; }
 
-  .toc-button.is-active::before {
-    content: "";
+  .roadmap-desktop li[data-active="true"]::before,
+  .roadmap-mobile li[data-active="true"]::before {
     position: absolute;
-    left: -10px;
     top: 50%;
+    left: -10px;
     width: 4px;
     height: 16px;
     transform: translateY(-50%);
     background: #fff;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    content: "";
   }
 
-  .mobile-toc {
+  .roadmap-mobile {
     display: none;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(25, 184, 190, 0.24);
+    background: rgba(3, 5, 7, 0.72);
+    padding: 0;
+  }
+
+  .roadmap-mobile summary {
+    padding: 0.85rem 1rem;
+    color: rgba(224, 251, 252, 0.78);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    list-style: none;
+    text-transform: uppercase;
+  }
+
+  .roadmap-mobile summary::after { float: right; content: "+"; }
+  .roadmap-mobile[open] summary::after { content: "−"; }
+  .roadmap-mobile ol { gap: 0; border-top: 1px solid rgba(25, 184, 190, 0.14); padding: 0.4rem 0; }
+  .roadmap-mobile button { padding: 0.62rem 1rem; font-size: 1rem; }
+
+  .collection-hub {
+    display: grid;
+    gap: 2rem;
+    margin-top: 3.5rem;
+    border-top: 1px solid rgba(25, 184, 190, 0.15);
+    padding-top: 2rem;
+    font-family: var(--font-body);
+  }
+
+  .collection-mobile { display: none; }
+  .collection-hub__header { display: grid; gap: 0.5rem; }
+
+  .collection-hub__toggle,
+  .collection-cluster__toggle,
+  .collection-group-card__toggle {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    text-align: left;
+  }
+
+  .collection-hub__toggle {
+    border: 1px solid rgba(25, 184, 190, 0.14);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.85rem 1rem;
+  }
+
+  .collection-hub__toggle > span,
+  .collection-cluster__toggle > span,
+  .collection-group-card__toggle > span { display: grid; gap: 0.35rem; }
+
+  .collection-chevron {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    color: rgba(25, 184, 190, 0.7);
+    transition: transform 160ms ease;
+  }
+
+  .collection-chevron.is-open { transform: rotate(180deg); }
+
+  .collection-hub__eyebrow,
+  .collection-cluster__eyebrow,
+  .collection-nav-card__eyebrow,
+  .collection-group-card__eyebrow {
+    display: block;
+    color: rgba(25, 184, 190, 0.7);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .collection-hub__title,
+  .collection-cluster__title,
+  .collection-group-card__title {
+    display: block;
+    margin: 0;
+    color: #fff;
+    font-family: var(--font-ui);
+    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+    line-height: 0.95;
+  }
+
+  .collection-hub__summary,
+  .collection-cluster__meta,
+  .collection-group-card__meta {
+    display: block;
+    margin: 0;
+    color: rgba(224, 251, 252, 0.62);
+    font-size: 0.94rem;
+    line-height: 1.6;
+  }
+
+  .collection-cluster,
+  .collection-group-card {
+    display: grid;
+    gap: 1rem;
+    border: 1px solid rgba(25, 184, 190, 0.16);
+    background: linear-gradient(180deg, rgba(25, 184, 190, 0.07), rgba(25, 184, 190, 0.02)), rgba(4, 6, 8, 0.84);
+    padding: 1.25rem;
+  }
+
+  .collection-cluster__header,
+  .collection-group-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .collection-cluster__action {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    border: 1px solid rgba(25, 184, 190, 0.22);
+    background: rgba(25, 184, 190, 0.08);
+    color: var(--cyan);
+    padding: 0.65rem 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .collection-nav-grid,
+  .collection-group-grid { display: grid; gap: 0.75rem; }
+
+  .collection-nav-card,
+  .collection-series-item,
+  .collection-group-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: 1px solid rgba(25, 184, 190, 0.18);
+    background: rgba(25, 184, 190, 0.04);
+    padding: 1rem;
+  }
+
+  .collection-nav-card { display: block; }
+  .collection-nav-card__title,
+  .collection-series-item__title,
+  .collection-group-item__title {
+    display: block;
+    margin-top: 0.35rem;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.98rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .collection-series-list,
+  .collection-group-card__list { display: grid; gap: 0.55rem; }
+
+  .collection-series-item--active {
+    border-color: rgba(25, 184, 190, 0.38);
+    background: rgba(25, 184, 190, 0.14);
+  }
+
+  .collection-series-item__order,
+  .collection-group-item__category {
+    flex: 0 0 auto;
+    color: rgba(25, 184, 190, 0.72);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .collection-mobile__body { display: grid; gap: 0.8rem; margin-top: 0.8rem; }
+  .collection-mobile [hidden] { display: none; }
+
+  @media (min-width: 768px) {
+    .collection-nav-grid,
+    .collection-group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 1023px) {
-    body {
-      overflow: auto;
-    }
-
-    .page {
+    .wiki-page {
       height: auto;
-      min-height: 100dvh;
+      min-height: 100vh;
+      overflow: visible;
       padding: 16px 16px 0;
     }
-
-    .top-nav {
-      grid-template-columns: 38px minmax(0, 1fr) 38px;
-      gap: 12px;
-    }
-
-    .category-row {
-      justify-content: center;
-      gap: clamp(18px, 8vw, 34px);
-    }
-
-    .category {
-      width: 38px;
-      height: 36px;
-    }
-
-    .category-mark {
-      width: 19px;
-      height: 19px;
-    }
-
-    .workspace {
-      display: block;
-      padding-top: 22px;
-    }
-
-    .content-scroll {
-      overflow: visible;
-    }
-
-    .article {
+    .page-toolbar {
       width: 100%;
-      padding: 0 0 92px;
+      grid-template-columns: 34px minmax(0, 1fr) 34px;
+      gap: 8px;
+      overflow: hidden;
     }
-
-    .article-title {
-      font-size: clamp(1.6rem, 8.6vw, 2.5rem);
-      line-height: 0.98;
-      letter-spacing: 1px;
-      margin-bottom: 0.7rem;
-    }
-
-    .article-summary,
-    .article p {
-      font-size: 0.94rem;
-      line-height: 1.7;
-    }
-
-    .article-section-title {
-      margin-top: 1.5rem;
-      margin-bottom: 0.8rem;
-      font-size: clamp(1.2rem, 5.8vw, 1.8rem);
-      line-height: 1.05;
-    }
-
-    .math-block {
-      padding: 0.8rem 0.75rem;
-      font-size: 0.95rem;
-    }
-
-    .toc {
-      display: none;
-    }
-
-    .mobile-toc {
-      display: block;
-      margin: 0 0 1.5rem;
-      border: 1px solid rgba(25, 184, 190, 0.24);
-      background: rgba(3, 5, 7, 0.72);
-    }
-
-    .mobile-toc summary {
-      cursor: pointer;
-      padding: 0.85rem 1rem;
-      color: rgba(224, 251, 252, 0.78);
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      list-style: none;
-    }
-
-    .mobile-toc summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .mobile-toc summary::after {
-      content: "+";
-      float: right;
-      color: rgba(224, 251, 252, 0.72);
-    }
-
-    .mobile-toc[open] summary::after {
-      content: "-";
-    }
-
-    .mobile-toc .toc-list {
-      gap: 0;
-      border-top: 1px solid rgba(25, 184, 190, 0.14);
-      padding: 0.4rem 0;
-    }
-
-    .mobile-toc .toc-button {
-      width: 100%;
-      padding: 0.62rem 1rem;
-      font-size: 1rem;
-      line-height: 1.25;
-    }
+    .icon-button { width: 34px; height: 34px; }
+    .category-nav { width: 100%; gap: 18px; }
+    .category-nav__item { width: 34px; height: 34px; }
+    .category-nav__item svg { width: 19px; height: 19px; }
+    .wiki-layout { display: block; width: 100%; padding-top: 22px; }
+    .wiki-content-scroll { width: 100%; overflow: visible; padding-bottom: 35vh; }
+    .wiki-hero, .wiki-body { width: 100%; max-width: 100%; padding: 0; }
+    .wiki-hero h1 { margin-bottom: 0.7rem; font-size: 2.5rem; line-height: 0.98; }
+    .wiki-hero > p, .section-markdown p { font-size: 0.94rem; line-height: 1.7; }
+    .wiki-body > section > h2 { margin-top: 1.5rem; font-size: 1.8rem; line-height: 1.05; }
+    .roadmap-desktop { display: none; }
+    .roadmap-mobile { display: block; width: 100%; padding: 0; }
+    .collection-desktop { display: none; }
+    .collection-mobile { display: block; }
+    .collection-hub { gap: 1rem; margin-top: 2.4rem; padding-top: 1.35rem; }
   }
 </style>
 </head>
 <body>
-  <div class="page">
-    <header class="top-nav">
-      <button class="back" type="button" aria-label="back">←</button>
+  <main class="sf-app wiki-page">
+    <header class="page-toolbar">
+      <a class="icon-button icon-button--round" href="#/" title="Lobby">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" /></svg>
+        <span class="sr-only">로비로 이동</span>
+      </a>
 
-      <nav class="category-row" aria-label="category navigation">
-        <button class="category is-active" type="button" title="Theory">
-          <svg class="category-mark" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 7v14" />
-            <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
-          </svg>
-          <span class="category-label">Theory</span>
-        </button>
-        <button class="category" type="button" title="Paper">
-          <svg class="category-mark" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" />
-            <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-            <path d="M10 9H8" />
-            <path d="M16 13H8" />
-            <path d="M16 17H8" />
-          </svg>
-          <span class="category-label">Paper</span>
-        </button>
-        <button class="category" type="button" title="Repo">
-          <svg class="category-mark" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m18 16 4-4-4-4" />
-            <path d="m6 8-4 4 4 4" />
-            <path d="m14.5 4-5 16" />
-          </svg>
-          <span class="category-label">Repo</span>
-        </button>
-        <button class="category" type="button" title="Implementation">
-          <svg class="category-mark" viewBox="0 0 24 24" aria-hidden="true">
-            <polyline points="4 17 10 11 4 5" />
-            <line x1="12" x2="20" y1="19" y2="19" />
-          </svg>
-          <span class="category-label">Implementation</span>
-        </button>
+      <nav class="category-nav" aria-label="문서 카테고리">
+        <a class="category-nav__item" href="#/wiki?category=THEORY" title="Theory">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg>
+        </a>
+        <a class="category-nav__item" href="#/wiki?category=PAPER" title="Paper">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" /><path d="M14 2v6h6M8 13h8M8 17h8" /></svg>
+        </a>
+        <a class="category-nav__item" href="#/wiki?category=REPO" title="Repo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4M14.5 4l-5 16" /></svg>
+        </a>
+        <a class="category-nav__item" data-active="true" href="#/wiki?category=IMPLEMENT" title="Implement">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 6-6-6-6M12 19h8" /></svg>
+        </a>
       </nav>
 
-      <a class="top-search-link" href="#/search" aria-label="search">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="11" cy="11" r="6" />
-          <path d="m16 16 4 4" />
-        </svg>
+      <a class="icon-button top-search-link" href="#/search" title="Search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+        <span class="sr-only">검색</span>
       </a>
     </header>
 
-    <div class="workspace">
-      <main class="content-scroll">
-        <article class="article">
-          <div class="breadcrumb">Theory / Sobolev Spaces</div>
-          <h1 class="article-title">Sobolev Spaces, Weak Derivatives, and Integration by Parts</h1>
-          <p class="article-summary">
-            고전미분은 점마다 도함수를 요구하지만, 약미분은 test function과의 적분 관계로 미분을 정의한다.
-          </p>
-
-          <div class="meta-data">
+    <article class="wiki-layout">
+      <div class="wiki-content-scroll">
+        <header class="wiki-hero">
+          <h1>Rendering Validation Sample</h1>
+          <p>본문 수식, 코드 블록, Mermaid diagram label 렌더링을 함께 확인하는 공개 검증 문서.</p>
+          <div class="wiki-meta">
+            <div class="meta-row"><span class="meta-label">Created</span><span>2026-07-06</span></div>
+            <div class="meta-row"><span class="meta-label">Updated</span><span>2026-07-07</span></div>
             <div class="meta-row">
               <span class="meta-label">Tags</span>
-              <span class="tag">weak-derivative</span>
-              <span class="tag">sobolev-space</span>
-              <span class="tag">integration-by-parts</span>
+              <ul class="tag-list"><li>math</li><li>mermaid</li><li>rendering</li></ul>
             </div>
           </div>
+        </header>
 
-          <details class="mobile-toc">
-            <summary>Document Roadmap</summary>
-            <nav class="toc-list">
-              <button class="toc-button is-active" type="button">(1) Classical Derivative와 Weak Derivative</button>
-              <button class="toc-button" type="button">(2) 간단한 예시</button>
-              <button class="toc-button" type="button">(3) Sobolev Space</button>
-              <button class="toc-button" type="button">(4) 원소 수준 비유</button>
-              <button class="toc-button" type="button">(5) Integration by Parts</button>
-            </nav>
-          </details>
+        <details class="roadmap-mobile">
+          <summary>Document Roadmap</summary>
+          <ol>
+            <li data-active="true"><button type="button" data-target="body-math">Body math</button></li>
+            <li><button type="button" data-target="short-labels">Short labels</button></li>
+            <li><button type="button" data-target="long-label">Long label</button></li>
+            <li><button type="button" data-target="code-fences">Code fences</button></li>
+            <li><button type="button" data-target="fallback-rule">Fallback rule</button></li>
+          </ol>
+        </details>
 
-          <h2 class="article-section-title">(1) Classical Derivative와 Weak Derivative</h2>
-          <p>고전미분은 점마다 도함수를 요구한다. 하지만 함수가 모든 점에서 매끄러울 필요는 없다.</p>
-          <div class="math-block">u(x) = |x|</div>
-          <p>
-            처럼 점 하나에서 미분이 안 되는 함수도 많다. weak derivative는 test function과의 적분 관계로
-            미분을 정의한다.
-          </p>
+        <div class="wiki-body">
+          <section id="body-math">
+            <h2>Body math</h2>
+            <div class="section-markdown">
+              <p>본문 inline math인 <span class="katex" role="math" aria-label="u ∈ Lᵖ(Ω)"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord mathnormal">u</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">p</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord">Ω</span><span class="mclose">)</span></span></span></span>와 약도함수 표기 <span class="katex" role="math" aria-label="D alpha u"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span></span></span></span></span></span></span></span><span class="mord mathnormal">u</span></span></span></span>가 일반 문장 안에서 깨지지 않아야 한다.</p>
+              <p>display math는 같은 section 안에서 별도 줄로 표시된다.</p>
+              <span class="katex-display" role="math" aria-label="W k p Omega function space definition"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1491em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">W</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight">p</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord">Ω</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">{</span><span class="mord mathnormal">u</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">p</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord">Ω</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">:</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7535em;vertical-align:-0.0391em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span></span></span></span></span></span></span></span><span class="mord mathnormal">u</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">p</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord">Ω</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">∣</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mclose">}</span></span></span></span></span>
+            </div>
+          </section>
 
-          <h2 class="article-section-title">(2) 간단한 예시</h2>
-          <p>
-            미분을 직접 계산하기 어렵거나 불가능한 경우에도 적분 항등식을 통해 함수의 변화를 다룰 수 있다.
-            이 관점은 PDE와 변분 문제에서 특히 자연스럽다.
-          </p>
+          <section id="short-labels">
+            <h2>Short labels</h2>
+            <div class="section-markdown">
+              <p>짧은 node label과 edge label은 Mermaid renderer가 직접 처리한다.</p>
+              <div class="mermaid-wrapper" data-zoom-root>
+                <div class="mermaid-toolbar">
+                  <span class="mermaid-toolbar__zoom">100%</span>
+                  <div class="mermaid-toolbar__controls">
+                    <button class="mermaid-toolbar__button" type="button" data-zoom="out">−</button>
+                    <button class="mermaid-toolbar__button" type="button" data-zoom="in">+</button>
+                    <button class="mermaid-toolbar__button mermaid-toolbar__button--reset" type="button" data-zoom="reset">reset</button>
+                  </div>
+                </div>
+                <div class="mermaid-surface">
+                  <div class="mermaid-diagram">
+                    <svg viewBox="-10 -10 576 125" style="max-width: 555.96875px;" role="img" aria-label="짧은 수식 label Mermaid 예시" preserveAspectRatio="xMidYMin meet">
+                      <defs>
+                        <marker id="arrow-short" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 10 5 0 10z" fill="#19b8be" /></marker>
+                      </defs>
+                      <g transform="translate(-10 -10) scale(1.03599)">
+                      <path class="static-edge" d="M122.625 52.289H227.063" marker-end="url(#arrow-short)" />
+                      <path class="static-edge" d="M340.063 52.289H414.688" marker-end="url(#arrow-short)" />
+                      <rect class="static-node" x="8" y="19.75" width="114.625" height="65.078" />
+                      <rect class="static-node" x="231.063" y="8" width="109" height="88.578" />
+                      <rect class="static-node" x="418.688" y="16.289" width="129.281" height="72" />
+                      <foreignObject x="56" y="43.75" width="18.625" height="17.078"><div xmlns="http://www.w3.org/1999/xhtml" class="nodeLabel"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msup><mi>x</mi><mn>2</mn></msup></math></div></foreignObject>
+                      <foreignObject x="279.063" y="32" width="13" height="40.578"><div xmlns="http://www.w3.org/1999/xhtml" class="nodeLabel"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></div></foreignObject>
+                      <foreignObject x="466.688" y="40.289" width="33.281" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="nodeLabel">Area</div></foreignObject>
+                      <foreignObject x="147.625" y="42.164" width="58.438" height="20.25"><div xmlns="http://www.w3.org/1999/xhtml" class="edgeLabel labelBkg"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msqrt><mrow><mi>x</mi><mo>+</mo><mn>3</mn></mrow></msqrt></math></div></foreignObject>
+                      <foreignObject x="365.063" y="43.75" width="28.625" height="17.078"><div xmlns="http://www.w3.org/1999/xhtml" class="edgeLabel labelBkg"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>π</mi><msup><mi>r</mi><mn>2</mn></msup></math></div></foreignObject>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
 
-          <h2 class="article-section-title">(3) Sobolev Space</h2>
-          <p>
-            Sobolev space는 함수 자체와 약도함수가 함께 적분 가능한 함수들의 공간이다. 예를 들어
-            <span style="color:#fff">H¹(Ω)</span>는 함수와 1차 약도함수가 모두 L²에 속하는 공간이다.
-          </p>
-          <div class="math-block">H¹(Ω) := W¹,²(Ω)</div>
+          <section id="long-label">
+            <h2>Long label</h2>
+            <div class="section-markdown">
+              <p>긴 수식 label은 잘림과 겹침을 확인한다.</p>
+              <div class="mermaid-wrapper" data-zoom-root>
+                <div class="mermaid-toolbar">
+                  <span class="mermaid-toolbar__zoom">100%</span>
+                  <div class="mermaid-toolbar__controls">
+                    <button class="mermaid-toolbar__button" type="button" data-zoom="out">−</button>
+                    <button class="mermaid-toolbar__button" type="button" data-zoom="in">+</button>
+                    <button class="mermaid-toolbar__button mermaid-toolbar__button--reset" type="button" data-zoom="reset">reset</button>
+                  </div>
+                </div>
+                <div class="mermaid-surface">
+                  <div class="mermaid-diagram">
+                    <svg viewBox="-10 -10 681 108" style="max-width: 660.03125px;" role="img" aria-label="긴 수식 label Mermaid 예시" preserveAspectRatio="xMidYMin meet">
+                      <defs>
+                        <marker id="arrow-long" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 10 5 0 10z" fill="#19b8be" /></marker>
+                      </defs>
+                      <g transform="translate(-10 -10) scale(1.03177)">
+                      <rect class="static-node" x="8" y="8" width="147.531" height="72" />
+                      <rect class="static-node" x="205.531" y="9.461" width="446.5" height="69.078" />
+                      <path class="static-edge" d="M155.531 44H201.531" marker-end="url(#arrow-long)" />
+                      <foreignObject x="56" y="32" width="51.531" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="nodeLabel">Source</div></foreignObject>
+                      <foreignObject x="253.531" y="33.461" width="350.5" height="21.078"><div xmlns="http://www.w3.org/1999/xhtml" class="nodeLabel"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi>x</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>c</mi><mn>1</mn></msub><mo stretchy="false">(</mo><mo>−</mo><mi>cos</mi><mo>⁡</mo><mi>t</mi><mo>+</mo><mi>sin</mi><mo>⁡</mo><mi>t</mi><mo stretchy="false">)</mo><msup><mi>e</mi><mrow><mn>2</mn><mi>t</mi></mrow></msup><mo>+</mo><msub><mi>c</mi><mn>2</mn></msub><mo stretchy="false">(</mo><mn>2</mn><mi>cos</mi><mo>⁡</mo><mi>t</mi><mo stretchy="false">)</mo><msup><mi>e</mi><mrow><mn>2</mn><mi>t</mi></mrow></msup></mrow></math></div></foreignObject>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
 
-          <h2 class="article-section-title">(4) 원소 수준 비유</h2>
-          <p>
-            유한차원에서는 벡터의 각 성분을 따지듯이, 함수공간에서는 함수값과 약도함수를 함께 관리한다.
-          </p>
+          <section id="code-fences">
+            <h2>Code fences</h2>
+            <div class="section-markdown">
+              <p>코드 블록은 language label과 syntax highlight가 유지되어야 한다.</p>
+              <div class="code-wrapper">
+                <div class="code-header"><span>python</span><span>[CODE]</span></div>
+                <pre><code><span class="token-keyword">def</span> <span class="token-function">weak_derivative_symbol</span>(alpha: <span class="token-type">str</span>) -&gt; <span class="token-type">str</span>:
+    <span class="token-keyword">return</span> <span class="token-string">f"D^{alpha} u"</span></code></pre>
+              </div>
+              <div class="code-wrapper">
+                <div class="code-header"><span>tsx</span><span>[CODE]</span></div>
+                <pre><code><span class="token-keyword">export function</span> <span class="token-function">InlineMathCheck</span>() {
+  <span class="token-keyword">return</span> &lt;<span class="token-tag">span</span>&gt;Rendered by ContentRenderer&lt;/<span class="token-tag">span</span>&gt;;
+}</code></pre>
+              </div>
+            </div>
+          </section>
 
-          <h2 class="article-section-title">(5) Integration by Parts</h2>
-          <p>weak derivative 정의의 핵심은 integration by parts다. 충분히 매끄러우면 다음 관계를 얻는다.</p>
-          <div class="math-block">∫Ω u ∂ᵢφ dx = − ∫Ω (∂ᵢu) φ dx + boundary term</div>
-        </article>
-      </main>
+          <section id="fallback-rule">
+            <h2>Fallback rule</h2>
+            <div class="section-markdown">
+              <p>이 문서가 깨지면 Mermaid label 안 수식은 기본 작성 규칙으로 쓰지 않는다.</p>
+              <p>복잡한 수식은 diagram 밖의 display math로 분리한다.</p>
+              <span class="katex-display" role="math" aria-label="x of t equals c one times a two-row matrix times e to the two t"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4em;vertical-align:-0.95em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">[</span></span><span class="mord"><span class="mtable"><span class="col-align-c"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.45em;"><span style="top:-3.61em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">−</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">cos</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mop">sin</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span></span></span><span style="top:-2.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">cos</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.95em;"><span></span></span></span></span></span></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">]</span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathnormal mtight">t</span></span></span></span></span></span></span></span></span></span></span></span></span>
+            </div>
+          </section>
 
-      <aside class="toc" aria-label="document map">
-        <h2 class="toc-heading">전체상</h2>
-        <h2 class="toc-heading">각 층의 분기 포인트</h2>
-        <h2 class="toc-heading">문서 로드맵</h2>
-        <nav class="toc-list">
-          <button class="toc-button is-active" type="button">(1) Classical Derivative와 Weak Derivative</button>
-          <button class="toc-button" type="button">(2) 간단한 예시</button>
-          <button class="toc-button" type="button">(3) Sobolev Space</button>
-          <button class="toc-button" type="button">(4) 원소 수준 비유</button>
-          <button class="toc-button" type="button">(5) Integration by Parts</button>
-        </nav>
+          <section class="collection-hub collection-desktop" aria-label="시리즈와 그룹 탐색">
+            <div class="collection-hub__header">
+              <div class="collection-hub__eyebrow">Document Network</div>
+              <h2 class="collection-hub__title">Series and Groups</h2>
+              <p class="collection-hub__summary">같은 읽기 흐름과 같은 주제 묶음을 한곳에서 이동할 수 있게 정리한 탐색 구역이다.</p>
+            </div>
+            <div class="collection-cluster">
+              <div class="collection-cluster__header">
+                <div>
+                  <div class="collection-cluster__eyebrow">Series</div>
+                  <h3 class="collection-cluster__title">IMPLEMENT Validation Samples</h3>
+                  <div class="collection-cluster__meta">1 / 2 문서</div>
+                </div>
+                <a class="collection-cluster__action" href="#/search?q=series%3Aimplement-validation-samples">Search Series</a>
+              </div>
+              <div class="collection-nav-grid">
+                <a class="collection-nav-card" href="#/wiki/implement/groups-series-example">
+                  <span class="collection-nav-card__eyebrow">Next In Series</span>
+                  <span class="collection-nav-card__title">Groups and Series Validation Sample</span>
+                </a>
+              </div>
+              <div class="collection-series-list">
+                <a class="collection-series-item collection-series-item--active" href="#/wiki/implement/mermaid-math-label-sample"><span class="collection-series-item__title">Rendering Validation Sample</span><span class="collection-series-item__order">#1</span></a>
+                <a class="collection-series-item" href="#/wiki/implement/groups-series-example"><span class="collection-series-item__title">Groups and Series Validation Sample</span><span class="collection-series-item__order">#2</span></a>
+              </div>
+            </div>
+            <div class="collection-cluster">
+              <div class="collection-cluster__header">
+                <div><div class="collection-cluster__eyebrow">Groups</div><h3 class="collection-cluster__title">Related Group Collections</h3><div class="collection-cluster__meta">1개 그룹에서 관련 문서를 찾을 수 있다.</div></div>
+              </div>
+              <div class="collection-group-grid">
+                <div class="collection-group-card">
+                  <div class="collection-group-card__header">
+                    <div><div class="collection-group-card__eyebrow">Group</div><h4 class="collection-group-card__title">Runtime Validation</h4><div class="collection-group-card__meta">1 related document</div></div>
+                    <a class="collection-cluster__action" href="#/search?q=group%3Aruntime-validation">Open Search</a>
+                  </div>
+                  <div class="collection-group-card__list">
+                    <a class="collection-group-item" href="#/wiki/implement/groups-series-example"><span class="collection-group-item__title">Groups and Series Validation Sample</span><span class="collection-group-item__category">IMPLEMENT</span></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="collection-hub collection-mobile" aria-label="시리즈와 그룹 탐색">
+            <button class="collection-hub__toggle" type="button" data-collection-toggle="mobile-network" aria-expanded="false">
+              <span><span class="collection-hub__eyebrow">Document Network</span><span class="collection-hub__title">Series and Groups</span><span class="collection-hub__summary">관련 시리즈와 그룹 탐색</span></span>
+              <svg class="collection-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+            </button>
+            <div class="collection-mobile__body" data-collection-panel="mobile-network" hidden>
+              <div class="collection-cluster">
+                <button class="collection-cluster__toggle" type="button" data-collection-toggle="mobile-series" aria-expanded="false">
+                  <span><span class="collection-cluster__eyebrow">Series</span><span class="collection-cluster__title">IMPLEMENT Validation Samples</span><span class="collection-cluster__meta">1 / 2 문서</span></span>
+                  <svg class="collection-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <div class="collection-mobile__body" data-collection-panel="mobile-series" hidden>
+                  <a class="collection-cluster__action" href="#/search?q=series%3Aimplement-validation-samples">Search Series</a>
+                  <div class="collection-nav-grid">
+                    <a class="collection-nav-card" href="#/wiki/implement/groups-series-example"><span class="collection-nav-card__eyebrow">Next In Series</span><span class="collection-nav-card__title">Groups and Series Validation Sample</span></a>
+                  </div>
+                  <div class="collection-series-list">
+                    <a class="collection-series-item collection-series-item--active" href="#/wiki/implement/mermaid-math-label-sample"><span class="collection-series-item__title">Rendering Validation Sample</span><span class="collection-series-item__order">#1</span></a>
+                    <a class="collection-series-item" href="#/wiki/implement/groups-series-example"><span class="collection-series-item__title">Groups and Series Validation Sample</span><span class="collection-series-item__order">#2</span></a>
+                  </div>
+                </div>
+              </div>
+              <div class="collection-group-card">
+                <button class="collection-group-card__toggle" type="button" data-collection-toggle="mobile-group" aria-expanded="false">
+                  <span><span class="collection-group-card__eyebrow">Group</span><span class="collection-group-card__title">Runtime Validation</span><span class="collection-group-card__meta">1 related document</span></span>
+                  <svg class="collection-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <div class="collection-mobile__body" data-collection-panel="mobile-group" hidden>
+                  <a class="collection-cluster__action" href="#/search?q=group%3Aruntime-validation">Open Search</a>
+                  <div class="collection-group-card__list">
+                    <a class="collection-group-item" href="#/wiki/implement/groups-series-example"><span class="collection-group-item__title">Groups and Series Validation Sample</span><span class="collection-group-item__category">IMPLEMENT</span></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <aside class="roadmap-desktop" aria-label="문서 로드맵">
+        <p class="eyebrow">ROADMAP</p>
+        <ol>
+          <li data-active="true"><button type="button" data-target="body-math">Body math</button></li>
+          <li><button type="button" data-target="short-labels">Short labels</button></li>
+          <li><button type="button" data-target="long-label">Long label</button></li>
+          <li><button type="button" data-target="code-fences">Code fences</button></li>
+          <li><button type="button" data-target="fallback-rule">Fallback rule</button></li>
+        </ol>
       </aside>
-    </div>
-  </div>
+    </article>
+  </main>
+
+<script>
+  const contentRoot = document.querySelector('.wiki-content-scroll');
+  let scrollAnimation = null;
+
+  const setActiveSection = (target) => {
+    document.querySelectorAll('.roadmap-desktop li, .roadmap-mobile li').forEach((item) => {
+      item.dataset.active = String(item.querySelector('[data-target]')?.dataset.target === target);
+    });
+  };
+
+  document.querySelectorAll('[data-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = button.dataset.target;
+      const element = document.getElementById(target);
+      if (!element) return;
+      setActiveSection(target);
+
+      if (scrollAnimation !== null) cancelAnimationFrame(scrollAnimation);
+      if (contentRoot.scrollHeight <= contentRoot.clientHeight + 1) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      const startTop = contentRoot.scrollTop;
+      const targetTop = startTop + element.getBoundingClientRect().top - contentRoot.getBoundingClientRect().top;
+      const distance = targetTop - startTop;
+      const duration = 560;
+      const startTime = performance.now();
+      const tick = (time) => {
+        const progress = Math.min((time - startTime) / duration, 1);
+        const eased = progress < 0.5 ? 4 * progress ** 3 : 1 - ((-2 * progress + 2) ** 3) / 2;
+        contentRoot.scrollTop = startTop + distance * eased;
+        if (progress < 1) scrollAnimation = requestAnimationFrame(tick);
+        else { scrollAnimation = null; setActiveSection(target); }
+      };
+      scrollAnimation = requestAnimationFrame(tick);
+    });
+  });
+
+  const observedSections = [...document.querySelectorAll('.wiki-body > section[id]')];
+  const observerRoot = contentRoot.scrollHeight > contentRoot.clientHeight + 1 ? contentRoot : null;
+  const sectionObserver = new IntersectionObserver((entries) => {
+    const visible = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top)[0];
+    if (visible) setActiveSection(visible.target.id);
+  }, { root: observerRoot, rootMargin: '-10% 0% -72% 0%' });
+  observedSections.forEach((section) => sectionObserver.observe(section));
+
+  document.querySelectorAll('[data-collection-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const panel = document.querySelector(`[data-collection-panel="${button.dataset.collectionToggle}"]`);
+      const isOpen = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', String(!isOpen));
+      button.querySelector('.collection-chevron')?.classList.toggle('is-open', !isOpen);
+      panel.hidden = isOpen;
+    });
+  });
+
+  document.querySelectorAll('[data-zoom-root]').forEach((root) => {
+    let scale = 1;
+    const label = root.querySelector('.mermaid-toolbar__zoom');
+    const diagram = root.querySelector('.mermaid-diagram');
+    root.querySelectorAll('[data-zoom]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (button.dataset.zoom === 'in') scale = Math.min(2.5, scale + 0.15);
+        if (button.dataset.zoom === 'out') scale = Math.max(0.7, scale - 0.15);
+        if (button.dataset.zoom === 'reset') scale = 1;
+        diagram.style.transform = `scale(${scale})`;
+        label.textContent = `${Math.round(scale * 100)}%`;
+      });
+    });
+  });
+</script>
 </body>
 </html>

@@ -12,15 +12,19 @@ SeraphField/
         │   ├── App.tsx
         │   └── routes.ts
         ├── components/
+        │   ├── CategoryNav.tsx
         │   ├── ContentRenderer.tsx
         │   ├── HomeButton.tsx
         │   ├── MermaidBlock.tsx
-        │   └── PageTransition.tsx
+        │   ├── PageTransition.tsx
+        │   └── UtilityNav.tsx
         ├── data/
         │   ├── contentApi.ts
         │   └── search.ts
         ├── pages/
+        │   ├── EmptyCategoryPage.tsx
         │   ├── LobbyPage.tsx
+        │   ├── NotFoundPage.tsx
         │   ├── SearchPage.tsx
         │   ├── StandalonePage.tsx
         │   └── WikiPage.tsx
@@ -50,7 +54,10 @@ flowchart LR
     Transition --> Lobby["LobbyPage"]
     Transition --> Wiki["WikiPage"]
     Transition --> Search["SearchPage"]
-    Transition --> Standalone["StandalonePage"]
+    Transition --> NotFound["NotFoundPage"]
+    Wiki --> EmptyCategory["EmptyCategoryPage"]
+    Wiki --> WikiNotFound["NotFoundPage"]
+    Wiki --> Standalone["StandalonePage"]
 ```
 
 ### [A-3] 라우팅
@@ -70,6 +77,7 @@ flowchart LR
 - 카테고리 진입: `#/wiki?category=<CATEGORY>`
 - 검색: `#/search`
 - 프로필: `#/wiki/profile`
+- `PROFILE`도 유효한 카테고리이므로 `#/wiki?category=PROFILE`로 목록을 열 수 있지만, 로비와 `CategoryNav`에는 링크를 표시하지 않습니다.
 
 ### [A-4] 데이터 로딩
 
@@ -84,24 +92,31 @@ flowchart LR
 동작:
 
 - `DocumentRecord.wikiRelpath`는 데이터 필드로 유지합니다. `WikiPage` JSX는 이 필드를 생략합니다.
-- `DocumentRecord.groups`는 group id 또는 title 문자열 배열입니다.
-- `DocumentRecord.series`는 `id`, `title`, `order`를 가집니다.
-- `DocumentRecord.layout`은 `wiki` 또는 `standalone`입니다.
-- `DocumentRecord.role`은 일반 콘텐츠와 상태별 대체 문서를 구분합니다.
+- TypeScript 모델에서 `DocumentRecord.groups`는 group id 또는 title 문자열 배열입니다.
+- TypeScript 모델에서 `DocumentRecord.series`는 `id`, `title`, `order`를 가집니다.
+- TypeScript 모델에서 `DocumentRecord.layout`은 `wiki` 또는 `standalone`입니다.
+- TypeScript 모델에서 `DocumentRecord.role`은 일반 콘텐츠와 상태별 대체 문서를 구분합니다.
 - `contentAvailable`은 본문 JSON에 내용이 있는지 나타냅니다.
+- export 인덱스의 런타임 필수 검증 필드는 `slug`, `title`, `summary`, `category`입니다. `groups`는 잘못된 값이면 빈 배열, `layout`은 `standalone` 외에는 `wiki`, `role`은 알려진 역할 외에는 `content`로 정규화합니다.
 - `documents.json` fetch가 실패하거나 유효한 문서 목록이 비어 있으면 fixture 문서를 사용합니다.
-- 개별 본문 JSON fetch가 실패하거나 section 본문이 비어 있으면 해당 문서의 `contentAvailable`을 `false`로 유지하고 `content-unavailable` 역할 문서를 표시합니다.
+- fixture에는 상태 역할 문서가 없고 fixture 프로필은 일반 위키 레이아웃입니다. 이때 빈 카테고리와 존재하지 않는 주소는 컴포넌트 내장 fallback을 표시합니다.
+- 개별 본문 JSON fetch가 실패하거나 모든 section에 비공백 Markdown이 없으면 해당 문서의 `contentAvailable`을 `false`로 유지하고, 역할 문서가 있으면 `content-unavailable` 문서를 표시합니다.
 
 ## [B] 공통 UI
 
 ### [B-1] 툴바와 탐색
 
 - 좌측 원형 홈 버튼은 `#/`로 이동합니다.
+- `UtilityNav`는 로비에서 홈, 프로필, 검색을 표시합니다.
+- 검색 화면은 별도 홈 버튼과 프로필만 표시합니다.
+- 위키, 카테고리 목록, standalone 화면은 홈 버튼, `THEORY`·`PAPER`·`REPO`·`IMPLEMENT` 카테고리 아이콘, 검색을 표시합니다.
+- `CategoryNav`는 현재 카테고리 아이콘에 `data-active="true"`를 지정합니다.
 
 ### [B-2] 반응형 기준
 
-- 로비, 위키, 검색은 같은 페이지 컴포넌트를 사용합니다.
-- 화면 폭 차이는 CSS 배치와 표시 전환으로 처리합니다.
+- 로비, 위키, 검색은 화면 폭이 달라도 각각 같은 페이지 컴포넌트를 유지합니다.
+- 기본 레이아웃과 표시 전환은 CSS media query로 처리합니다.
+- 위키의 `Series and Groups`는 `window.innerWidth < 1024`와 `resize` 이벤트로 관리하는 `isCompactViewport` state에 따라 데스크탑과 compact DOM을 다르게 렌더링합니다.
 
 ### [B-3] 페이지 전환과 모션
 
@@ -122,7 +137,24 @@ flowchart LR
 
 ### [B-5] 특수 렌더링
 
-코드 블록, 수식, Mermaid 렌더링의 동작과 표시 기준은 [code-math-mermaid-rendering.md](code-math-mermaid-rendering.md)를 따릅니다.
+코드 블록, 수식, Mermaid의 작성법, 지원 범위, 오류 기준은 [code-math-mermaid-rendering.md](code-math-mermaid-rendering.md)를 따릅니다.
+
+- 코드·수식·Mermaid 블록의 위아래 간격: `24px`
+
+| 요소 | 글꼴 / 크기 | 줄높이 | 내부 간격 |
+|---|---|---|---|
+| 코드 헤더 | `Share Tech Mono`, `12.16px`, `400` | `21.28px` | padding `8px 16px` |
+| 코드 본문 | `Share Tech Mono`, `13px`, `400` | `19.5px` | padding `16px` |
+| display 수식 | `19.36px`, `400` | `23.232px` | padding `16px` |
+| Mermaid toolbar | `Share Tech Mono`, `12.16px`, `400` | `21.28px` | gap `12px`; padding `8px 16px`; 아래 `8.8px` |
+| Mermaid control | `Share Tech Mono`, `13.12px`, `400` | `1` | 최소 폭 `34.4px`; 높이 `32px`; control gap `6.4px` |
+| Mermaid surface | `Noto Sans KR` label | `1.35` | padding `14.4px 14.4px 16px` |
+
+테두리와 배경:
+
+- 코드: `1px rgba(25, 184, 190, 0.3)`, 배경 `rgba(0, 0, 0, 0.85)`
+- display 수식: `1px rgba(25, 184, 190, 0.12)`, 왼쪽 `3px #19B8BE`, 배경 `rgba(3, 5, 7, 0.9)`
+- Mermaid surface: `1px rgba(25, 184, 190, 0.3)`, 배경 `rgba(4, 6, 8, 0.92)` 위 시안 gradient
 
 ## [C] 페이지별 사양
 
@@ -157,7 +189,8 @@ main.lobby-viewport
 
 - 검색은 상단 아이콘으로 검색 페이지를 엽니다.
 - 모바일은 카테고리 카드를 한 열로 쌓습니다.
-- 넓은 화면에서는 두 열 배치와 우측 배치를 사용할 수 있습니다.
+- `560px` 초과에서는 카테고리 카드가 두 열이며, `900px` 이상에서는 콘솔을 우측에 배치합니다.
+- `1180px` 이상에서는 콘솔 폭을 `430px`, 우측 여백을 `24px`로 고정합니다.
 
 ### [C-2] 카테고리 목록
 
@@ -280,6 +313,36 @@ flowchart LR
 - `ContentRenderer`는 lazy import됩니다.
 - fallback은 `.section-markdown.section-markdown--loading`입니다.
 
+#### 시각 수치
+
+- 기준 목업: `docs/example_page/wiki-layout-responsive-sample.html`
+- 기준 콘텐츠: `wiki/implement/mermaid-math-label-sample.md`
+- 문서 영역: 최대 `900px`, 좌우 padding `24px`, 내부 콘텐츠 최대 `852px`
+
+| 요소 | 글꼴 / 크기 | 줄높이 | 간격 |
+|---|---|---|---|
+| 문서 제목 | `Teko`, `64px`, `500` | `0.92` | 아래 `14px` |
+| 문서 요약 | `Noto Sans KR`, `16.8px`, `300` | `1.8` | 아래 `26px` |
+| 섹션 제목 | `Teko`, `40px`, `700` | `1` | 위 `32px`, 아래 `16px` |
+| 본문 | `Noto Sans KR`, `16.8px`, `300` | `1.8` | 문단 아래 `24px` |
+
+샘플 검증값:
+
+- 두 줄 코드 블록 전체 높이: `111.27px`
+- fallback matrix 수식 영역: 약 `235.6 × 46.44px`
+- fallback matrix 박스 전체 높이: 약 `80.45px`
+
+모바일 `1023px` 이하:
+
+| 요소 | 크기 | 줄높이 | 간격 |
+|---|---|---|---|
+| 문서 제목 | `40px` | `0.98` | 아래 `11.2px` |
+| 문서 요약 / 본문 | `15.04px` | `1.7` | 문단 아래 `24px` |
+| 섹션 제목 | `28.8px` | `1.05` | 위 `24px`, 아래 `12.8px` |
+| 페이지 | 전체 폭 | 기본 본문 흐름 | 좌우 `16px` |
+
+정적 목업은 `global.css`와 `ContentRenderer.tsx`의 선언을 기준으로 동기화합니다. 샘플 검증값은 현재 샘플 콘텐츠와 폰트가 로드된 브라우저에서 확인한 값입니다.
+
 #### 반응형 배치
 
 데스크탑:
@@ -333,7 +396,7 @@ main.search-page
 
 - 검색 범위 선택에 네이티브 `select`를 사용하지 않습니다.
 - 모바일과 데스크탑은 같은 결과 카드 구조를 사용합니다.
-- 데스크탑에서는 결과 칩을 카드 우측에 붙일 수 있습니다.
+- `900px` 이상에서는 결과 카드가 본문과 태그의 두 열이 되며 태그를 우측 정렬합니다.
 - 모바일에서는 결과 메타, 요약, 칩이 세로로 쌓입니다.
 
 ### [C-5] Standalone 화면
@@ -352,13 +415,14 @@ main.standalone-page
     │   └── p
     └── div.standalone-body
         └── section
-            ├── h2
+            ├── h2 (section.title이 `Overview`가 아닐 때)
             └── ContentRenderer
 ```
 
 동작:
 
 - `layout: standalone` 문서는 공통 툴바와 Markdown renderer를 유지합니다.
+- section 제목이 `Overview`이면 해당 `h2`를 렌더링하지 않습니다.
 - 프로필은 `role: profile`을 사용합니다.
 - 프로필은 `#/wiki/profile` 경로에서 standalone 레이아웃으로 엽니다.
 - 존재하지 않는 주소는 `role: not-found` 문서를 표시합니다.
