@@ -1,6 +1,8 @@
-# Seraph Field UI 스펙
+# Seraph Field Web Interface Specification
 
-## 관련 구조
+## [A] 전체 동작
+
+### [A-1] 관련 구조
 
 ```text
 SeraphField/
@@ -26,7 +28,19 @@ SeraphField/
             └── global.css
 ```
 
-## Page Flow
+레이아웃 시각 견본:
+
+```text
+SeraphField/
+└── docs/
+    ├── design-notes.html
+    └── example_page/
+        ├── lobby-simple-sample.html
+        ├── search-layout-sample.html
+        └── wiki-layout-responsive-sample.html
+```
+
+### [A-2] 페이지 흐름
 
 ```mermaid
 flowchart LR
@@ -39,7 +53,25 @@ flowchart LR
     Transition --> Standalone["StandalonePage"]
 ```
 
-## Data Loading
+### [A-3] 라우팅
+
+```mermaid
+flowchart LR
+    Hash["window.location.hash"] --> Parse["parseHashRoute(hash)"]
+    Parse --> Kind["route.kind"]
+    Parse --> Slug["route.slug"]
+    Parse --> Category["route.category"]
+```
+
+라우팅 대상:
+
+- 로비: `#/`
+- 위키 본문: `#/wiki/<slug>`
+- 카테고리 진입: `#/wiki?category=<CATEGORY>`
+- 검색: `#/search`
+- 프로필: `#/wiki/profile`
+
+### [A-4] 데이터 로딩
 
 ```mermaid
 flowchart LR
@@ -60,7 +92,43 @@ flowchart LR
 - `documents.json` fetch가 실패하거나 유효한 문서 목록이 비어 있으면 fixture 문서를 사용합니다.
 - 개별 본문 JSON fetch가 실패하거나 section 본문이 비어 있으면 해당 문서의 `contentAvailable`을 `false`로 유지하고 `content-unavailable` 역할 문서를 표시합니다.
 
-## Lobby
+## [B] 공통 UI
+
+### [B-1] 툴바와 탐색
+
+- 좌측 원형 홈 버튼은 `#/`로 이동합니다.
+
+### [B-2] 반응형 기준
+
+- 로비, 위키, 검색은 같은 페이지 컴포넌트를 사용합니다.
+- 화면 폭 차이는 CSS 배치와 표시 전환으로 처리합니다.
+
+### [B-3] 페이지 전환과 모션
+
+- `App`은 현재 라우트로 `routeKey`를 만들고 모든 페이지를 `PageTransition`으로 감쌉니다.
+- `PageTransition`은 `AnimatePresence`의 `popLayout` 모드를 사용합니다.
+- 전환 시간은 `260ms`이며 opacity와 `3px` blur를 교차 보간합니다.
+- 모바일과 데스크탑은 같은 전환을 사용합니다.
+- `prefers-reduced-motion`이 활성화되면 전환 시간을 `0`으로 둡니다.
+
+### [B-4] 색상과 타이포그래피
+
+- 배경: `#0e1012`
+- HUD 시안: `#19b8be`, 대부분 낮은 opacity로 사용
+- 유틸리티 아이콘: `rgba(196, 220, 222, 0.72)`에 가까운 회청색
+- 표시 폰트: `Teko`
+- 모노 폰트: `Share Tech Mono`
+- 본문 폰트: `Noto Sans KR`
+
+### [B-5] 특수 렌더링
+
+코드 블록, 수식, Mermaid 렌더링의 동작과 표시 기준은 [code-math-mermaid-rendering.md](code-math-mermaid-rendering.md)를 따릅니다.
+
+## [C] 페이지별 사양
+
+### [C-1] 로비
+
+#### 구조와 동작
 
 ```text
 main.lobby-viewport
@@ -85,7 +153,15 @@ main.lobby-viewport
 - 각 카드는 `#/wiki?category=<CATEGORY>`로 이동합니다.
 - 로비에는 로고 이미지, 프로필 이미지, 생성 이미지, 최근 문서 목록, 검색 입력창을 렌더링하지 않습니다.
 
-## Category Index
+#### 반응형 배치
+
+- 검색은 상단 아이콘으로 검색 페이지를 엽니다.
+- 모바일은 카테고리 카드를 한 열로 쌓습니다.
+- 넓은 화면에서는 두 열 배치와 우측 배치를 사용할 수 있습니다.
+
+### [C-2] 카테고리 목록
+
+#### 구조와 동작
 
 ```text
 main.wiki-page
@@ -110,7 +186,9 @@ main.wiki-page
 - 각 항목은 `#/wiki/<slug>`로 이동합니다.
 - 항목에는 `updatedAt`, `title`, `summary`를 표시합니다.
 
-## Wiki Page
+### [C-3] 위키 본문
+
+#### 구조와 동작
 
 ```text
 main.wiki-page
@@ -134,13 +212,9 @@ main.wiki-page
 
 - `WikiPage`는 `contentRef = useRef<HTMLDivElement>(null)`를 선언합니다.
 - `.wiki-content-scroll`에 `ref={contentRef}`를 연결합니다.
-- `.wiki-content-scroll` 안에 `.wiki-hero`, `.roadmap-mobile`, `.wiki-body`를 모두 배치합니다.
 - `.wiki-body`에는 독립 스크롤을 주지 않습니다.
-- `.roadmap-desktop`은 `.wiki-content-scroll` 밖의 sibling입니다.
-- `.roadmap-mobile`은 `.wiki-content-scroll` 안의 `details` 요소입니다.
-- `.collection-hub`는 `.wiki-body` 안에서 본문 section들 뒤에 렌더링합니다.
 
-## Series And Groups
+#### Series And Groups
 
 ```text
 section.collection-hub
@@ -164,12 +238,13 @@ section.collection-hub
 - 같은 series에 속한 문서가 2개 이상이면 series cluster를 표시합니다.
 - series cluster는 이전 문서, 다음 문서, 전체 series 문서 목록을 표시합니다.
 - 같은 group에 속한 다른 문서가 있으면 group cluster를 표시합니다.
+- 같은 group의 다른 문서가 없으면 해당 group card를 표시하지 않습니다.
 - group card는 최대 5개 관련 문서를 표시하고, 더 있으면 남은 수를 표시합니다.
 - `Search Series`는 `#/search?q=series:<id>`로 이동합니다.
 - `Open Search`는 `#/search?q=group:<id>`로 이동합니다.
 - reference UI 기준은 `reference/SeraphField/seraph-field-site/src/components/ArchiveMarkdown.tsx`의 `collection-hub` 구조입니다.
 
-## Roadmap
+#### 문서 로드맵
 
 ```mermaid
 flowchart LR
@@ -190,7 +265,44 @@ flowchart LR
 - 내부 스크롤이 불가능하면 `element.scrollIntoView({ behavior: 'smooth', block: 'start' })`를 사용합니다.
 - cleanup에서 남은 `requestAnimationFrame`을 취소합니다.
 
-## Search Page
+#### Markdown 본문
+
+```mermaid
+flowchart LR
+    WikiPage["WikiPage"] --> Suspense["Suspense"]
+    Suspense --> Renderer["ContentRenderer"]
+    Renderer --> MermaidBlock["MermaidBlock"]
+```
+
+동작:
+
+- `WikiPage`는 각 section의 `markdown`을 `ContentRenderer`에 전달합니다.
+- `ContentRenderer`는 lazy import됩니다.
+- fallback은 `.section-markdown.section-markdown--loading`입니다.
+
+#### 반응형 배치
+
+데스크탑:
+
+- 본문은 읽기 폭 안에서 중앙 정렬합니다.
+- 상단 카테고리 아이콘 행은 본문 폭에 맞춰 중앙 정렬합니다.
+- 문서 로드맵은 우측 목차 패널로 표시합니다.
+- `Series and Groups`는 본문 아래 `collection-hub`로 펼쳐서 표시합니다.
+- `.wiki-content-scroll`이 `overflow-y: auto`와 `padding-bottom: 45vh`를 담당합니다.
+
+모바일:
+
+- 우측 목차 패널은 숨깁니다.
+- 문서 메타데이터 아래에 접이식 `Document Roadmap` 블록을 표시합니다.
+- 본문 아래 `Series and Groups`는 접힌 상태로 시작합니다.
+- `Series and Groups`를 열면 `Series`와 각 `Group`도 각각 접힌 상태로 시작합니다.
+- 상단 카테고리 아이콘 행은 그대로 유지하고 중앙 정렬합니다.
+- 검색은 우측 상단 작은 아이콘으로 유지합니다.
+- `.wiki-content-scroll`은 `overflow: visible`과 `padding-bottom: 35vh`를 사용합니다.
+
+### [C-4] 검색
+
+#### 구조와 동작
 
 ```text
 main.search-page
@@ -209,13 +321,24 @@ main.search-page
 동작:
 
 - 검색 입력은 `query` state로 관리합니다.
-- 검색 범위는 `All`, `Title`, `Tag`, `Group`, `Series`입니다.
+- 검색 범위는 `All`, `Title`, `Tag`, `Group`, `Series` 칩으로 선택합니다.
 - 범위 선택은 `scope-tabs` 버튼으로 처리합니다.
 - 검색 결과는 `searchDocuments(documents, query, scope)` 결과입니다.
 - `group:<id>`와 `series:<id>` 쿼리는 선택된 scope와 별개로 해당 메타데이터를 직접 필터링합니다.
 - 검색은 로드된 `documents` 배열을 필터링합니다.
 
-## Standalone Page
+#### 반응형 배치
+
+동작:
+
+- 검색 범위 선택에 네이티브 `select`를 사용하지 않습니다.
+- 모바일과 데스크탑은 같은 결과 카드 구조를 사용합니다.
+- 데스크탑에서는 결과 칩을 카드 우측에 붙일 수 있습니다.
+- 모바일에서는 결과 메타, 요약, 칩이 세로로 쌓입니다.
+
+### [C-5] Standalone 화면
+
+#### 구조와 동작
 
 ```text
 main.standalone-page
@@ -237,31 +360,13 @@ main.standalone-page
 
 - `layout: standalone` 문서는 공통 툴바와 Markdown renderer를 유지합니다.
 - 프로필은 `role: profile`을 사용합니다.
+- 프로필은 `#/wiki/profile` 경로에서 standalone 레이아웃으로 엽니다.
 - 존재하지 않는 주소는 `role: not-found` 문서를 표시합니다.
-- 본문이 없거나 로드되지 않으면 `role: content-unavailable` 문서를 표시합니다.
-- 빈 카테고리는 `role: empty-category` 문서를 표시합니다.
 - 역할 문서도 문서 목록과 검색 데이터에 포함됩니다.
 
-## Page Transition
+#### 반응형 배치
 
-- `App`은 현재 라우트로 `routeKey`를 만들고 모든 페이지를 `PageTransition`으로 감쌉니다.
-- `PageTransition`은 `AnimatePresence`의 `popLayout` 모드를 사용합니다.
-- 전환 시간은 `260ms`이며 opacity와 `3px` blur를 교차 보간합니다.
-- 모바일과 데스크탑은 같은 전환을 사용합니다.
-- `prefers-reduced-motion`이 활성화되면 전환 시간을 `0`으로 둡니다.
-
-## Markdown Body
-
-```mermaid
-flowchart LR
-    WikiPage["WikiPage"] --> Suspense["Suspense"]
-    Suspense --> Renderer["ContentRenderer"]
-    Renderer --> MermaidBlock["MermaidBlock"]
-```
-
-동작:
-
-- `WikiPage`는 각 section의 `markdown`을 `ContentRenderer`에 전달합니다.
-- `ContentRenderer`는 lazy import됩니다.
-- fallback은 `.section-markdown.section-markdown--loading`입니다.
-- 수식, 코드, Mermaid 세부 동작은 [code-math-mermaid-rendering.md](code-math-mermaid-rendering.md)를 기준으로 봅니다.
+- 프로필과 상태 문서는 `.standalone-page`와 `.standalone-layout`을 사용합니다.
+- 제목, 요약, Markdown section을 한 열로 표시합니다.
+- 상단에는 홈 버튼, 카테고리 탐색, 검색 아이콘을 유지합니다.
+- 모바일에서는 본문 바깥 여백과 제목 크기를 줄입니다.

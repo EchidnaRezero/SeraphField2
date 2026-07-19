@@ -30,6 +30,27 @@ flowchart LR
     JSON --> Site["seraph-field/ 사이트"]
 ```
 
+## 빌드와 배포 흐름
+
+```mermaid
+flowchart LR
+    Wiki["wiki/**/*.md"] --> Export["npm run export:content"]
+    DbSchema["db/schema.sql"] --> Export
+    Export --> PublicJson["seraph-field/public/db/exports/"]
+    React["seraph-field/src/"] --> Build["npm run build"]
+    PublicJson --> Build
+    Static["seraph-field/public/images/"] --> Build
+    Build --> Dist["seraph-field/dist/"]
+    Dist --> Pages["GitHub Pages"]
+```
+
+화살표는 앞 경로 또는 단계가 뒤 단계의 입력으로 사용됨을 뜻합니다.
+
+### 커밋 전 점검
+
+- 프로젝트 루트 밖의 로컬 파일이나 폴더를 가리키는 경로가 없는지 확인합니다.
+- 토큰, 비밀번호, 이메일 주소 등 공개하면 안 되는 정보나 개인 식별정보가 없는지 확인합니다.
+
 ## [A1] raw/: 비공개 원천 자료
 
 `raw/`는 지식 소스별 원문 자료를 보관합니다.
@@ -139,8 +160,7 @@ db/
 - [design-notes.html](design-notes.html)
 - [db-design-notes.md](db-design-notes.md)
 - [code-math-mermaid-rendering.md](code-math-mermaid-rendering.md)
-- [ui-spec.md](ui-spec.md)
-- [ui-spec-mobile.md](ui-spec-mobile.md)
+- [web-interface-spec.md](web-interface-spec.md)
 - [project-structure.md](project-structure.md)
 
 예시 페이지:
@@ -152,7 +172,7 @@ docs/example_page/
   search-layout-sample.html
 ```
 
-`design-notes.html`과 `docs/example_page/`는 React 구현 전에 만든 간단한 시각 견본입니다. 현재 동작 기준은 React 코드와 `ui-spec.md`, `ui-spec-mobile.md`, `code-math-mermaid-rendering.md`를 함께 확인합니다.
+`design-notes.html`과 `docs/example_page/`는 React 구현 전에 만든 간단한 시각 견본입니다. 현재 동작 기준은 React 코드와 `web-interface-spec.md`, `code-math-mermaid-rendering.md`를 함께 확인합니다.
 
 ## [A6] schema/: 지침과 스키마 참고 자료
 
