@@ -180,7 +180,7 @@ main.lobby-viewport
 
 동작:
 
-- `.lobby-page__backdrop`은 `images/lobby-backdrop.png`를 배경으로 사용합니다.
+- `.lobby-page__backdrop`은 `images/lobby-backdrop-19a.png`를 배경으로 사용합니다.
 - 카테고리 카드는 `THEORY`, `PAPER`, `REPO`, `IMPLEMENT`를 렌더링합니다.
 - 각 카드는 `#/wiki?category=<CATEGORY>`로 이동합니다.
 - 로비에는 로고 이미지, 프로필 이미지, 생성 이미지, 최근 문서 목록, 검색 입력창을 렌더링하지 않습니다.

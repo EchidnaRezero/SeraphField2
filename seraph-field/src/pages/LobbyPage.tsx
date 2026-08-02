@@ -15,7 +15,7 @@ const iconByCategory = {
 };
 
 export const LobbyPage = ({ documents }: LobbyPageProps) => {
-  const backgroundUrl = `${import.meta.env.BASE_URL}images/lobby-backdrop.png`;
+  const backgroundUrl = `${import.meta.env.BASE_URL}images/lobby-backdrop-19a.png`;
 
   return (
     <main className="lobby-viewport">
@@ -59,7 +59,7 @@ export const LobbyPage = ({ documents }: LobbyPageProps) => {
           </nav>
 
           <footer className="lobby-page__footer">
-            <div>Background Image: Squad 31-A</div>
+            <div>Background Image: Squad 19-A</div>
             <div>Heaven Burns Red ©WFS, Developed by Wright Flyer Studios, ©VISUAL ARTS/Key</div>
           </footer>
         </div>
